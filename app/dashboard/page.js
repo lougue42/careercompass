@@ -3,8 +3,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
+import { useToast } from '@/components/ToastProvider'; // ✅ added
 
 export default function Dashboard() {
+  const toast = useToast(); // ✅ added
+
   // --- Theme palette ---
   const theme = {
     bg: '#f7f8fb',
@@ -77,9 +80,7 @@ export default function Dashboard() {
     const to = from + pageSize - 1;
 
     try {
-      let query = supabase
-        .from('applications')
-        .select('*', { count: 'exact' });
+      let query = supabase.from('applications').select('*', { count: 'exact' });
 
       if (debouncedSearch) {
         const q = debouncedSearch.replace(/[%]/g, '');
@@ -144,6 +145,7 @@ export default function Dashboard() {
       const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: row.app_uuid });
       if (error) throw error;
       await reloadCurrentPage();
+      toast('Application deleted'); // ✅ toast on success
     } catch (err) {
       console.error('Delete error (rpc):', err);
       alert('Error deleting: ' + (err.message || String(err)));
@@ -188,6 +190,7 @@ export default function Dashboard() {
       setEditing(null);
       setForm({ company: '', role: '', status: '', next_action: '', due_date: '' });
       await reloadCurrentPage();
+      toast('Application updated'); // ✅ toast on success
     } catch (err) {
       console.error('Update error (rpc):', err);
       setErrorMsg('Could not update application.');
@@ -205,9 +208,8 @@ export default function Dashboard() {
     if (!dateStr) return null;
     const today = new Date();
     const date = new Date(dateStr);
-    // Normalize to midnight difference
     const msPerDay = 24 * 60 * 60 * 1000;
-    return Math.floor((date.setHours(0,0,0,0) - today.setHours(0,0,0,0)) / msPerDay);
+    return Math.floor((date.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0)) / msPerDay);
   };
 
   const DuePill = ({ due }) => {
@@ -233,7 +235,7 @@ export default function Dashboard() {
     return <span style={badge(tone)}>{fmt(status)}</span>;
   };
 
-  // memoize counts for the header (just a nice touch)
+  // memoize counts for the header
   const counts = useMemo(() => {
     const tally = { total: total, applied: 0, interview: 0, offer: 0, rejected: 0 };
     rows.forEach((r) => {
@@ -370,11 +372,7 @@ export default function Dashboard() {
               style={{ ...inputStyle }}
             />
             {search && (
-              <button
-                onClick={() => setSearch('')}
-                style={{ ...btn.base }}
-                title="Clear search"
-              >
+              <button onClick={() => setSearch('')} style={{ ...btn.base }} title="Clear search">
                 Clear
               </button>
             )}
@@ -410,11 +408,7 @@ export default function Dashboard() {
             >
               Next ›
             </button>
-            <select
-              value={pageSize}
-              onChange={onPageSizeChange}
-              style={{ ...inputStyle, width: 110, padding: 8 }}
-            >
+            <select value={pageSize} onChange={onPageSizeChange} style={{ ...inputStyle, width: 110, padding: 8 }}>
               {[10, 20, 50].map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}/page
@@ -426,7 +420,12 @@ export default function Dashboard() {
 
         {/* Add form card */}
         <div style={{ ...card, padding: 16, marginBottom: 16 }}>
-          <AddApplicationForm onCreated={reloadCurrentPage} />
+          <AddApplicationForm
+            onCreated={async () => {
+              await reloadCurrentPage();
+              toast('Application added'); // ✅ toast on add
+            }}
+          />
         </div>
 
         {/* Error banner */}
@@ -446,17 +445,9 @@ export default function Dashboard() {
         )}
 
         {/* Table */}
-        <div
-          style={{
-            ...card,
-            overflow: 'hidden',
-          }}
-        >
+        <div style={{ ...card, overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
-            <table
-              cellPadding="12"
-              style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}
-            >
+            <table cellPadding="12" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}>
               <thead>
                 <tr
                   style={{
@@ -561,10 +552,18 @@ export default function Dashboard() {
             <span style={{ color: theme.mutedText, fontSize: 13 }}>
               Page {page} of {maxPage} • {startIdx}-{endIdx} of {total}
             </span>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={loading || page <= 1} style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={loading || page <= 1}
+              style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
+            >
               ‹ Prev
             </button>
-            <button onClick={() => setPage((p) => Math.min(maxPage, p + 1))} disabled={loading || page >= maxPage} style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}>
+            <button
+              onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
+              disabled={loading || page >= maxPage}
+              style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
+            >
               Next ›
             </button>
             <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ ...inputStyle, width: 110, padding: 8 }}>
