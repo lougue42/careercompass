@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
-import { useToast } from '@/components/ToastProvider'; // ✅ added
+import { useToast } from '../components/ToastProvider'; // ✅ added
 
 export default function Dashboard() {
   const toast = useToast(); // ✅ added
