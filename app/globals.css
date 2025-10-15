@@ -32,27 +32,33 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden; /* prevents visible gutters */
 }
 
-/* Ensure body gradient fills screen */
+/* Ensure gradient fills viewport cleanly */
 body {
   background: radial-gradient(
-    ellipse at top,
+    120% 120% at 50% 0%,
     #ffffff 0%,
     #f8fafc 50%,
     #f1f5f9 100%
   );
   background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
+/* Dark mode version */
 @media (prefers-color-scheme: dark) {
   body {
     background: radial-gradient(
-      ellipse at top,
+      120% 120% at 50% 0%,
       #0b1220 0%,
       #0b1324 50%,
       #0b1428 100%
     );
     background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
   }
 }
