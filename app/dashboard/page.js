@@ -65,6 +65,9 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [search]);
 
+  // Status filter (clickable badges)
+  const [statusFilter, setStatusFilter] = useState(''); // '', 'Applied', 'Interview', 'Offer', 'Rejected', 'Wishlist'
+
   // helpful ref to scroll to the Add form from empty state
   const addFormRef = useRef(null);
 
@@ -99,6 +102,11 @@ export default function Dashboard() {
         );
       }
 
+      // apply status filter
+      if (statusFilter) {
+        query = query.eq('status', statusFilter);
+      }
+
       const ascending = sortDir === 'asc';
       query = query.order(sortBy, { ascending, nullsFirst: false });
       if (sortBy !== 'created_at') {
@@ -128,11 +136,11 @@ export default function Dashboard() {
   useEffect(() => {
     loadApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, sortBy, sortDir, debouncedSearch]);
+  }, [page, pageSize, sortBy, sortDir, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, sortBy, sortDir, pageSize]);
+  }, [debouncedSearch, sortBy, sortDir, pageSize, statusFilter]);
 
   async function reloadCurrentPage() {
     await loadApps();
@@ -390,14 +398,61 @@ export default function Dashboard() {
             <h1 className="m-0 tracking-tight text-xl sm:text-2xl">Career Compass</h1>
             <div className="text-slate-500 mt-1 text-sm">Track, sort, and refine your job hunt.</div>
           </div>
+
+          {/* Clickable status badges */}
           <div className="ml-auto flex flex-wrap gap-2">
-            <div style={badge('neutral')}>Total: {counts.total}</div>
-            <div style={badge('info')}>Applied: {counts.applied}</div>
-            <div style={badge('primary')}>Interview: {counts.interview}</div>
-            <div style={badge('success')}>Offer: {counts.offer}</div>
-            <div style={badge('danger')}>Rejected: {counts.rejected}</div>
+            {/* Total = clear filter */}
+            <button
+              type="button"
+              onClick={() => setStatusFilter('')}
+              style={{
+                ...badge('neutral'),
+                ...(statusFilter === '' ? { boxShadow: 'inset 0 0 0 2px rgba(15,23,42,0.15)' } : {}),
+                cursor: 'pointer'
+              }}
+              aria-pressed={statusFilter === ''}
+              title="Show all"
+            >
+              Total: {counts.total}
+            </button>
+
+            {[
+              { label: 'Applied', tone: 'info', count: counts.applied },
+              { label: 'Interview', tone: 'primary', count: counts.interview },
+              { label: 'Offer', tone: 'success', count: counts.offer },
+              { label: 'Rejected', tone: 'danger', count: counts.rejected },
+            ].map(({ label, tone, count }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setStatusFilter((curr) => (curr === label ? '' : label))}
+                style={{
+                  ...badge(tone),
+                  ...(statusFilter === label ? { boxShadow: 'inset 0 0 0 2px rgba(15,23,42,0.15)' } : {}),
+                  cursor: 'pointer'
+                }}
+                aria-pressed={statusFilter === label}
+                title={`Filter by ${label}`}
+              >
+                {label}: {count}
+              </button>
+            ))}
           </div>
         </div>
+
+        {/* Active filter chip */}
+        {statusFilter && (
+          <div className="mb-2 text-sm text-slate-600 flex items-center gap-2">
+            <span>Filtered by:</span>
+            <button
+              onClick={() => setStatusFilter('')}
+              className="rounded-full border border-slate-300 px-2 py-1"
+              title="Clear filter"
+            >
+              {statusFilter} ✕
+            </button>
+          </div>
+        )}
 
         {/* Controls */}
         <div
