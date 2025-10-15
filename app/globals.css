@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+/* Root color variables */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc; /* soft off-white, not pure white */
+  --foreground: #0f172a; /* slate-like text color */
 }
 
 @theme inline {
@@ -12,15 +13,46 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dark mode palette */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b1220; /* dark navy blue */
+    --foreground: #f1f5f9; /* very light slate text */
   }
 }
 
+/* Global reset & base */
+html,
 body {
-  background: var(--background);
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure body gradient fills screen */
+body {
+  background: radial-gradient(
+    ellipse at top,
+    #ffffff 0%,
+    #f8fafc 50%,
+    #f1f5f9 100%
+  );
+  background-attachment: fixed;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: radial-gradient(
+      ellipse at top,
+      #0b1220 0%,
+      #0b1324 50%,
+      #0b1428 100%
+    );
+    background-attachment: fixed;
+  }
 }
