@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
-import { useToast } from '../components/ToastProvider'; // ✅ added
+import { useToast } from '../components/ToastProvider';
 
 export default function Dashboard() {
-  const toast = useToast(); // ✅ added
+  const toast = useToast();
 
   // --- Theme palette ---
   const theme = {
@@ -64,6 +64,9 @@ export default function Dashboard() {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => clearTimeout(t);
   }, [search]);
+
+  // helpful ref to scroll to the Add form from empty state
+  const addFormRef = useRef(null);
 
   const toDateInput = (value) => {
     if (!value) return '';
@@ -145,7 +148,7 @@ export default function Dashboard() {
       const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: row.app_uuid });
       if (error) throw error;
       await reloadCurrentPage();
-      toast('Application deleted'); // ✅ toast on success
+      toast('Application deleted');
     } catch (err) {
       console.error('Delete error (rpc):', err);
       alert('Error deleting: ' + (err.message || String(err)));
@@ -190,7 +193,7 @@ export default function Dashboard() {
       setEditing(null);
       setForm({ company: '', role: '', status: '', next_action: '', due_date: '' });
       await reloadCurrentPage();
-      toast('Application updated'); // ✅ toast on success
+      toast('Application updated');
     } catch (err) {
       console.error('Update error (rpc):', err);
       setErrorMsg('Could not update application.');
@@ -224,13 +227,7 @@ export default function Dashboard() {
 
   const StatusBadge = ({ status }) => {
     const s = String(status || '').toLowerCase();
-    const map = {
-      applied: 'info',
-      interview: 'primary',
-      offer: 'success',
-      rejected: 'danger',
-      wishlist: 'neutral',
-    };
+    const map = { applied: 'info', interview: 'primary', offer: 'success', rejected: 'danger', wishlist: 'neutral' };
     const tone = map[s] || 'neutral';
     return <span style={badge(tone)}>{fmt(status)}</span>;
   };
@@ -256,16 +253,8 @@ export default function Dashboard() {
       cursor: 'pointer',
       boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
     },
-    primary: {
-      background: theme.primary,
-      border: `1px solid ${theme.primary}`,
-      color: theme.primaryText,
-    },
-    danger: {
-      background: theme.danger,
-      border: `1px solid ${theme.danger}`,
-      color: theme.primaryText,
-    },
+    primary: { background: theme.primary, border: `1px solid ${theme.primary}`, color: theme.primaryText },
+    danger: { background: theme.danger, border: `1px solid ${theme.danger}`, color: theme.primaryText },
     disabled: { opacity: 0.6, cursor: 'not-allowed' },
   };
 
@@ -308,10 +297,7 @@ export default function Dashboard() {
       fontWeight: 600,
     };
   }
-
-  function pill(tone) {
-    return { ...badge(tone), fontWeight: 500 };
-  }
+  function pill(tone) { return { ...badge(tone), fontWeight: 500 }; }
 
   // pagination helpers
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
@@ -388,7 +374,7 @@ export default function Dashboard() {
               <option value="role">Role</option>
               <option value="status">Status</option>
             </select>
-            <button onClick={toggleSortDir} style={{ ...btn.base }}>
+            <button onClick={toggleSortDir} style={{ ...btn.base }} aria-label="Toggle sort direction">
               {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
             </button>
             <span style={{ color: theme.mutedText, fontSize: 13, marginLeft: 8 }}>
@@ -398,6 +384,7 @@ export default function Dashboard() {
               onClick={prevPage}
               disabled={loading || page <= 1}
               style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
+              aria-label="Previous page"
             >
               ‹ Prev
             </button>
@@ -405,6 +392,7 @@ export default function Dashboard() {
               onClick={nextPage}
               disabled={loading || page >= maxPage}
               style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
+              aria-label="Next page"
             >
               Next ›
             </button>
@@ -419,11 +407,11 @@ export default function Dashboard() {
         </div>
 
         {/* Add form card */}
-        <div style={{ ...card, padding: 16, marginBottom: 16 }}>
+        <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
           <AddApplicationForm
             onCreated={async () => {
               await reloadCurrentPage();
-              toast('Application added'); // ✅ toast on add
+              toast('Application added');
             }}
           />
         </div>
@@ -476,8 +464,26 @@ export default function Dashboard() {
               <tbody>
                 {!loading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={13} style={{ color: theme.mutedText, padding: 20 }}>
-                      No applications yet.
+                    <td colSpan={13} style={{ padding: 28 }}>
+                      {/* Friendly empty state */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          color: theme.mutedText,
+                        }}
+                      >
+                        <span>No applications yet.</span>
+                        <button
+                          style={{ ...btn.base, ...btn.primary }}
+                          onClick={() => {
+                            addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }}
+                        >
+                          Add your first application
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -516,6 +522,7 @@ export default function Dashboard() {
                             style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
                             onClick={() => handleEdit(r)}
                             disabled={isDeleting}
+                            aria-label="Edit application"
                           >
                             Edit
                           </button>
@@ -523,13 +530,12 @@ export default function Dashboard() {
                             style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
                             onClick={() => handleDelete(r)}
                             disabled={isDeleting}
+                            aria-label="Delete application"
                           >
                             {isDeleting ? 'Deleting…' : 'Delete'}
                           </button>
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 11, color: theme.mutedText }}>
-                          uuid: {r.app_uuid ? r.app_uuid : '—'}
-                        </div>
+                        {/* UUID display removed for a cleaner UI */}
                       </td>
                     </tr>
                   );
@@ -611,7 +617,7 @@ export default function Dashboard() {
                 {saving ? 'Saving…' : 'Edit Application'}
               </h3>
               <div style={{ marginLeft: 'auto', color: theme.mutedText, fontSize: 12 }}>
-                {editing?.app_uuid ? `UUID: ${editing.app_uuid}` : ''}
+                {editing?.company ? editing.company : ''}
               </div>
             </div>
 
