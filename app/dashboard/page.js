@@ -104,6 +104,7 @@ export default function Dashboard() {
       if (sortBy !== 'created_at') {
         query = query.order('created_at', { ascending: false, nullsFirst: false });
       }
+      // Stable secondary to prevent jumpiness
       query = query.order('app_uuid', { ascending: true });
 
       const { data, error, count } = await query.range(from, to);
@@ -309,26 +310,87 @@ export default function Dashboard() {
   const onSortByChange = (e) => setSortBy(e.target.value);
   const toggleSortDir = () => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
 
+  // ---------- Small-screen card renderer ----------
+  function AppCard({ r }) {
+    const key = r.app_uuid ?? r.id ?? r.created_at;
+    const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
+    return (
+      <div
+        key={key}
+        className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
+        style={{ boxShadow: theme.shadow }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">{fmt(r.company)}</h3>
+            <p className="text-sm text-slate-600">{fmt(r.role)}</p>
+          </div>
+          <StatusBadge status={r.status} />
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-xs text-slate-400">Function</div>
+            <div className="text-slate-700">{fmt(r.function)}</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Industry</div>
+            <div className="text-slate-700">{fmt(r.industry)}</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Next action</div>
+            <div className="text-slate-700 truncate">{fmt(r.next_action)}</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Due</div>
+            <div className="text-slate-700"><DuePill due={r.due_date} /></div>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-slate-500">
+          <div>Interest: <span className="text-slate-800">{fmt(r.interest_rating)}</span></div>
+          <div>Energy: <span className="text-slate-800">{fmt(r.energy_rating)}</span></div>
+          <div>Resp. days: <span className="text-slate-800">{fmt(r.response_days)}</span></div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            onClick={() => handleEdit(r)}
+            disabled={isDeleting}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 active:scale-[.98]"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(r)}
+            disabled={isDeleting}
+            className="inline-flex items-center justify-center rounded-lg bg-red-600 text-white px-3 py-2 text-sm font-medium disabled:opacity-50 active:scale-[.98]"
+          >
+            {isDeleting ? 'Deleting…' : 'Delete'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main
       style={{
         background: theme.bg,
         minHeight: '100vh',
-        padding: 28,
+        padding: 16,
         fontFamily: 'system-ui, -apple-system',
         color: theme.text,
       }}
     >
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div className="max-w-6xl mx-auto w-full px-2 sm:px-4 md:px-6">
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
           <div>
-            <h1 style={{ margin: 0, letterSpacing: 0.2 }}>Career Compass</h1>
-            <div style={{ color: theme.mutedText, marginTop: 4, fontSize: 14 }}>
-              Track, sort, and refine your job hunt.
-            </div>
+            <h1 className="m-0 tracking-tight text-xl sm:text-2xl">Career Compass</h1>
+            <div className="text-slate-500 mt-1 text-sm">Track, sort, and refine your job hunt.</div>
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div className="ml-auto flex flex-wrap gap-2">
             <div style={badge('neutral')}>Total: {counts.total}</div>
             <div style={badge('info')}>Applied: {counts.applied}</div>
             <div style={badge('primary')}>Interview: {counts.interview}</div>
@@ -339,18 +401,11 @@ export default function Dashboard() {
 
         {/* Controls */}
         <div
-          style={{
-            ...card,
-            padding: 14,
-            marginBottom: 16,
-            display: 'grid',
-            gap: 12,
-            gridTemplateColumns: '1fr auto',
-            alignItems: 'center',
-          }}
+          style={{ ...card, padding: 14, marginBottom: 16 }}
+          className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center"
         >
           {/* Search */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="flex items-center gap-2">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -365,8 +420,8 @@ export default function Dashboard() {
           </div>
 
           {/* Sorting / Pagination (top) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'end' }}>
-            <label style={{ fontSize: 13, color: theme.mutedText }}>Sort</label>
+          <div className="flex flex-wrap items-center gap-2 justify-self-end">
+            <label className="text-slate-500 text-sm">Sort</label>
             <select value={sortBy} onChange={onSortByChange} style={{ ...inputStyle, width: 160, padding: 8 }}>
               <option value="created_at">Added</option>
               <option value="due_date">Due date</option>
@@ -377,7 +432,7 @@ export default function Dashboard() {
             <button onClick={toggleSortDir} style={{ ...btn.base }} aria-label="Toggle sort direction">
               {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
             </button>
-            <span style={{ color: theme.mutedText, fontSize: 13, marginLeft: 8 }}>
+            <span className="text-slate-500 text-sm ml-2">
               {startIdx}-{endIdx} of {total}
             </span>
             <button
@@ -432,155 +487,156 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Table */}
-        <div style={{ ...card, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table cellPadding="12" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}>
-              <thead>
-                <tr
-                  style={{
-                    position: 'sticky',
-                    top: 0,
-                    background: theme.header,
-                    zIndex: 1,
-                    borderBottom: `1px solid ${theme.border}`,
-                  }}
-                >
-                  <th style={{ textAlign: 'left' }}>Company</th>
-                  <th style={{ textAlign: 'left' }}>Role</th>
-                  <th style={{ textAlign: 'left' }}>Function</th>
-                  <th style={{ textAlign: 'left' }}>Industry</th>
-                  <th style={{ textAlign: 'left' }}>Status</th>
-                  <th style={{ textAlign: 'left' }}>Next action</th>
-                  <th style={{ textAlign: 'left' }}>Due</th>
-                  <th style={{ textAlign: 'left' }}>Interest</th>
-                  <th style={{ textAlign: 'left' }}>Energy</th>
-                  <th style={{ textAlign: 'left' }}>Response days</th>
-                  <th style={{ textAlign: 'left' }}>Outcome</th>
-                  <th style={{ textAlign: 'left' }}>Added</th>
-                  <th style={{ textAlign: 'left' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!loading && rows.length === 0 && (
-                  <tr>
-                    <td colSpan={13} style={{ padding: 28 }}>
-                      {/* Friendly empty state */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 12,
-                          color: theme.mutedText,
-                        }}
-                      >
-                        <span>No applications yet.</span>
-                        <button
-                          style={{ ...btn.base, ...btn.primary }}
-                          onClick={() => {
-                            addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }}
-                        >
-                          Add your first application
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {rows.map((r, idx) => {
-                  const key = r.app_uuid ?? r.id ?? r.created_at;
-                  const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
-                  const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
-                  return (
-                    <tr
-                      key={key}
-                      style={{
-                        borderBottom: `1px solid ${theme.border}`,
-                        background: zebra,
-                        transition: 'background 120ms ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
-                    >
-                      <td>{fmt(r.company)}</td>
-                      <td>{fmt(r.role)}</td>
-                      <td>{fmt(r.function)}</td>
-                      <td>{fmt(r.industry)}</td>
-                      <td><StatusBadge status={r.status} /></td>
-                      <td style={{ maxWidth: 240, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                        {fmt(r.next_action)}
-                      </td>
-                      <td><DuePill due={r.due_date} /></td>
-                      <td>{fmt(r.interest_rating)}</td>
-                      <td>{fmt(r.energy_rating)}</td>
-                      <td>{fmt(r.response_days)}</td>
-                      <td>{fmt(r.outcome)}</td>
-                      <td>{fmtDate(r.created_at)}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <button
-                            style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
-                            onClick={() => handleEdit(r)}
-                            disabled={isDeleting}
-                            aria-label="Edit application"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
-                            onClick={() => handleDelete(r)}
-                            disabled={isDeleting}
-                            aria-label="Delete application"
-                          >
-                            {isDeleting ? 'Deleting…' : 'Delete'}
-                          </button>
-                        </div>
-                        {/* UUID display removed for a cleaner UI */}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Bottom controls */}
+        {/* ----------- DATA RENDER ----------- */}
+        {!loading && rows.length === 0 && (
           <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              padding: 12,
-              borderTop: `1px solid ${theme.border}`,
-            }}
+            className="text-slate-600 flex items-center gap-3 justify-between bg-white rounded-xl border border-slate-200 p-4"
+            style={{ boxShadow: theme.shadow }}
           >
-            <span style={{ color: theme.mutedText, fontSize: 13 }}>
-              Page {page} of {maxPage} • {startIdx}-{endIdx} of {total}
-            </span>
+            <span>No applications yet.</span>
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={loading || page <= 1}
-              style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
+              style={{ ...btn.base, ...btn.primary }}
+              onClick={() => addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             >
-              ‹ Prev
+              Add your first application
             </button>
-            <button
-              onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
-              disabled={loading || page >= maxPage}
-              style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
-            >
-              Next ›
-            </button>
-            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ ...inputStyle, width: 110, padding: 8 }}>
-              {[10, 20, 50].map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}/page
-                </option>
-              ))}
-            </select>
           </div>
-        </div>
+        )}
+
+        {/* Cards on small screens */}
+        {!loading && rows.length > 0 && (
+          <div className="md:hidden space-y-3">
+            {rows.map((r, idx) => (
+              <AppCard key={(r.app_uuid ?? r.id ?? r.created_at) + ':' + idx} r={r} />
+            ))}
+          </div>
+        )}
+
+        {/* Table on md+ */}
+        {!loading && rows.length > 0 && (
+          <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
+            <div style={{ overflowX: 'auto' }}>
+              <table cellPadding="12" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}>
+                <thead>
+                  <tr
+                    style={{
+                      position: 'sticky',
+                      top: 0,
+                      background: theme.header,
+                      zIndex: 1,
+                      borderBottom: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <th style={{ textAlign: 'left' }}>Company</th>
+                    <th style={{ textAlign: 'left' }}>Role</th>
+                    <th style={{ textAlign: 'left' }}>Function</th>
+                    <th style={{ textAlign: 'left' }}>Industry</th>
+                    <th style={{ textAlign: 'left' }}>Status</th>
+                    <th style={{ textAlign: 'left' }}>Next action</th>
+                    <th style={{ textAlign: 'left' }}>Due</th>
+                    <th style={{ textAlign: 'left' }}>Interest</th>
+                    <th style={{ textAlign: 'left' }}>Energy</th>
+                    <th style={{ textAlign: 'left' }}>Response days</th>
+                    <th style={{ textAlign: 'left' }}>Outcome</th>
+                    <th style={{ textAlign: 'left' }}>Added</th>
+                    <th style={{ textAlign: 'left' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, idx) => {
+                    const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
+                    const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
+                    const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
+                    return (
+                      <tr
+                        key={key}
+                        style={{
+                          borderBottom: `1px solid ${theme.border}`,
+                          background: zebra,
+                          transition: 'background 120ms ease',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
+                      >
+                        <td>{fmt(r.company)}</td>
+                        <td>{fmt(r.role)}</td>
+                        <td>{fmt(r.function)}</td>
+                        <td>{fmt(r.industry)}</td>
+                        <td><StatusBadge status={r.status} /></td>
+                        <td style={{ maxWidth: 280, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                          {fmt(r.next_action)}
+                        </td>
+                        <td><DuePill due={r.due_date} /></td>
+                        <td>{fmt(r.interest_rating)}</td>
+                        <td>{fmt(r.energy_rating)}</td>
+                        <td>{fmt(r.response_days)}</td>
+                        <td>{fmt(r.outcome)}</td>
+                        <td>{fmtDate(r.created_at)}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <button
+                              style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
+                              onClick={() => handleEdit(r)}
+                              disabled={isDeleting}
+                              aria-label="Edit application"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
+                              onClick={() => handleDelete(r)}
+                              disabled={isDeleting}
+                              aria-label="Delete application"
+                            >
+                              {isDeleting ? 'Deleting…' : 'Delete'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bottom controls */}
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                padding: 12,
+                borderTop: `1px solid ${theme.border}`,
+              }}
+            >
+              <span className="text-slate-500 text-sm">
+                Page {page} of {maxPage} • {startIdx}-{endIdx} of {total}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={loading || page <= 1}
+                style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
+              >
+                ‹ Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
+                disabled={loading || page >= maxPage}
+                style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
+              >
+                Next ›
+              </button>
+              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ ...inputStyle, width: 110, padding: 8 }}>
+                {[10, 20, 50].map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}/page
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -621,9 +677,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label>
-                <div style={{ marginBottom: 6, color: theme.mutedText, fontSize: 13 }}>Company</div>
+                <div className="mb-1 text-slate-500 text-sm">Company</div>
                 <input
                   value={form.company}
                   onChange={(e) => setForm({ ...form, company: e.target.value })}
@@ -634,7 +690,7 @@ export default function Dashboard() {
               </label>
 
               <label>
-                <div style={{ marginBottom: 6, color: theme.mutedText, fontSize: 13 }}>Role</div>
+                <div className="mb-1 text-slate-500 text-sm">Role</div>
                 <input
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -645,7 +701,7 @@ export default function Dashboard() {
               </label>
 
               <label>
-                <div style={{ marginBottom: 6, color: theme.mutedText, fontSize: 13 }}>Status</div>
+                <div className="mb-1 text-slate-500 text-sm">Status</div>
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
@@ -661,7 +717,7 @@ export default function Dashboard() {
               </label>
 
               <label>
-                <div style={{ marginBottom: 6, color: theme.mutedText, fontSize: 13 }}>Due date</div>
+                <div className="mb-1 text-slate-500 text-sm">Due date</div>
                 <input
                   type="date"
                   value={form.due_date}
@@ -671,8 +727,8 @@ export default function Dashboard() {
                 />
               </label>
 
-              <label style={{ gridColumn: '1 / -1' }}>
-                <div style={{ marginBottom: 6, color: theme.mutedText, fontSize: 13 }}>Next action</div>
+              <label className="sm:col-span-2">
+                <div className="mb-1 text-slate-500 text-sm">Next action</div>
                 <input
                   value={form.next_action}
                   onChange={(e) => setForm({ ...form, next_action: e.target.value })}
