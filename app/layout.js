@@ -1,7 +1,7 @@
 // app/layout.js
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ToastProvider } from "../components/ToastProvider"; // ⬅️ switched to relative import
+import { ToastProvider } from "./components/ToastProvider"; // ✅ correct relative path
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
