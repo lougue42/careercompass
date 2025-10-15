@@ -13,14 +13,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Dark mode palette */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b1220; /* dark navy blue */
-    --foreground: #f1f5f9; /* very light slate text */
-  }
-}
-
 /* Global reset & base */
 html,
 body {
@@ -32,10 +24,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
-  overflow-x: hidden; /* prevents visible gutters */
+  overflow-x: hidden;
 }
 
-/* Ensure gradient fills viewport cleanly */
+/* Full-viewport radial gradient */
 body {
   background: radial-gradient(
     120% 120% at 50% 0%,
@@ -45,20 +37,5 @@ body {
   );
   background-attachment: fixed;
   background-repeat: no-repeat;
-  background-size: 100% 100%;
-}
-
-/* Dark mode version */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: radial-gradient(
-      120% 120% at 50% 0%,
-      #0b1220 0%,
-      #0b1324 50%,
-      #0b1428 100%
-    );
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-  }
+  background-size: cover;
 }

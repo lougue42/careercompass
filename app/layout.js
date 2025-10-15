@@ -1,4 +1,3 @@
-// app/layout.js
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastProvider } from "./components/ToastProvider";
@@ -30,23 +29,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* Solid fallback + prevent horizontal scroll revealing body bg */}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen overflow-x-hidden text-slate-900`}
       >
-        {/* Full-viewport, full-width gradient (stretches in Safari/Chrome) */}
-        <div
-          className="
-            w-screen min-h-screen
-            bg-fixed bg-no-repeat [background-size:100%_100%]
-            bg-[radial-gradient(120%_120%_at_50%_0%,var(--tw-gradient-stops))]
-            from-white via-slate-50 to-slate-100
-            dark:from-[#0b1220] dark:via-[#0b1324] dark:to-[#0b1428]
-          "
-        >
-          <div className="mx-auto max-w-6xl px-4 py-6">
-            <ToastProvider>{children}</ToastProvider>
-          </div>
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          <ToastProvider>{children}</ToastProvider>
         </div>
       </body>
     </html>
