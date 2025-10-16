@@ -901,3 +901,17 @@ export default function Dashboard() {
     </label>
   </div>
 </details>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" onClick={() => setEditing(null)} style={{ ...btn.base }}>
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} style={{ ...btn.base, ...btn.primary }}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </main>
+  );
+}
