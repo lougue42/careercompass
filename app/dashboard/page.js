@@ -862,16 +862,25 @@ export default function Dashboard() {
                     onChange={(e) => setForm({ ...form, source: e.target.value })}
                     style={inputStyle}
                     disabled={saving}
-                  />
-                </label>
-                <label className="sm:col-span-2">
-                  <div className="mb-1 text-slate-500 text-sm">Location</div>
-                  <input
-                    value={form.location}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
-                    style={inputStyle}
-                    disabled={saving}
-                  />
-                </label>
-                <label className="sm:col-span-2">
-                  <div className="mb-1 text-slate
+                 />
+</label>
+
+<label className="sm:col-span-2">
+  <div className="mb-1 text-slate-500 text-sm">Location</div>
+  <input
+    value={form.location}
+    onChange={(e) => setForm({ ...form, location: e.target.value })}
+    style={inputStyle}
+    disabled={saving}
+  />
+</label>
+
+<label className="sm:col-span-2">
+  <div className="mb-1 text-slate-500 text-sm">Notes</div>
+  <input
+    value={form.notes}
+    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+    style={inputStyle}
+    disabled={saving}
+  />
+</label>
