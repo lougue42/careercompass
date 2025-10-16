@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
 import { useToast } from '../components/ToastProvider';
+import { updateApplication } from '../../actions/applications';
 
 export default function Dashboard() {
   const toast = useToast();
 
-  // --- Theme palette ---
+  // Theme
   const theme = {
     bg: '#f7f8fb',
     card: '#ffffff',
@@ -31,7 +32,7 @@ export default function Dashboard() {
     shadow: '0 6px 24px rgba(15, 23, 42, 0.06)',
   };
 
-  // --- Data & UI state ---
+  // Data & UI state
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -46,10 +47,18 @@ export default function Dashboard() {
     status: '',
     next_action: '',
     due_date: '',
+    // Advanced
+    interest_level: '',
+    energy_level: '',
+    days_to_respond: '',
+    notes_private: '',
+    source: '',
+    location: '',
+    priority: '2',
   });
 
   // Pagination
-  const [page, setPage] = useState(1); // 1-based
+  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
@@ -65,11 +74,12 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Status filter (clickable badges)
-  const [statusFilter, setStatusFilter] = useState(''); // '', 'Applied', 'Interview', 'Offer', 'Rejected', 'Wishlist'
+  // Filter
+  const [statusFilter, setStatusFilter] = useState('');
 
-  // helpful ref to scroll to the Add form from empty state
+  // Refs
   const addFormRef = useRef(null);
+  const firstInputRef = useRef(null);
 
   const toDateInput = (value) => {
     if (!value) return '';
@@ -77,11 +87,10 @@ export default function Dashboard() {
     return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
   };
 
-  // --- Load with pagination + sorting + filter ---
+  // Load rows
   async function loadApps() {
     setLoading(true);
     setErrorMsg('');
-
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -102,17 +111,11 @@ export default function Dashboard() {
         );
       }
 
-      // apply status filter
-      if (statusFilter) {
-        query = query.eq('status', statusFilter);
-      }
+      if (statusFilter) query = query.eq('status', statusFilter);
 
       const ascending = sortDir === 'asc';
       query = query.order(sortBy, { ascending, nullsFirst: false });
-      if (sortBy !== 'created_at') {
-        query = query.order('created_at', { ascending: false, nullsFirst: false });
-      }
-      // Stable secondary to prevent jumpiness
+      if (sortBy !== 'created_at') query = query.order('created_at', { ascending: false, nullsFirst: false });
       query = query.order('app_uuid', { ascending: true });
 
       const { data, error, count } = await query.range(from, to);
@@ -146,7 +149,7 @@ export default function Dashboard() {
     await loadApps();
   }
 
-  // --- Delete (RPC) ---
+  // Delete (still via RPC you already have)
   async function handleDelete(row) {
     if (!row) return alert('Missing row.');
     if (!row.app_uuid) return alert('This row has no app_uuid; refresh and try again.');
@@ -166,7 +169,7 @@ export default function Dashboard() {
     }
   }
 
-  // --- Edit flow ---
+  // Edit flow
   function handleEdit(row) {
     setEditing(row);
     setForm({
@@ -175,13 +178,35 @@ export default function Dashboard() {
       status: row.status ?? 'Applied',
       next_action: row.next_action ?? '',
       due_date: row.due_date ? toDateInput(row.due_date) : '',
+      // Advanced prefill
+      interest_level: row.interest_level ?? '',
+      energy_level: row.energy_level ?? '',
+      days_to_respond: row.days_to_respond ?? '',
+      notes_private: row.notes_private ?? '',
+      source: row.source ?? '',
+      location: row.location ?? '',
+      priority: String(row.priority ?? 2),
     });
   }
 
+  // Focus and ESC in modal
+  useEffect(() => {
+    if (!editing) return;
+    const t = setTimeout(() => firstInputRef.current?.focus(), 0);
+    const onKey = (e) => {
+      if (e.key === 'Escape') setEditing(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [editing]);
+
+  // Save via server action
   async function handleUpdate(e) {
     e.preventDefault();
-    if (!editing) return;
-    if (!editing.app_uuid) {
+    if (!editing?.app_uuid) {
       alert('Missing app_uuid; cannot update safely.');
       return;
     }
@@ -189,22 +214,29 @@ export default function Dashboard() {
     setErrorMsg('');
     try {
       const payload = {
-        p_uuid: editing.app_uuid,
-        p_company: form.company || null,
-        p_role: form.role || null,
-        p_status: form.status || null,
-        p_next_action: form.next_action || null,
-        p_due_date: form.due_date ? form.due_date : null,
+        app_uuid: editing.app_uuid,
+        company: form.company,
+        role: form.role,
+        status: form.status,
+        next_action: form.next_action || null,
+        due_date: form.due_date || null,
+        interest_level: form.interest_level === '' ? null : Number(form.interest_level),
+        energy_level: form.energy_level === '' ? null : Number(form.energy_level),
+        days_to_respond: form.days_to_respond === '' ? null : Number(form.days_to_respond),
+        notes_private: form.notes_private || null,
+        source: form.source || null,
+        location: form.location || null,
+        priority: form.priority === '' ? 2 : Number(form.priority),
       };
-      const { error } = await supabase.rpc('app_update_by_uuid', payload);
+
+      const { error } = await updateApplication(payload);
       if (error) throw error;
 
       setEditing(null);
-      setForm({ company: '', role: '', status: '', next_action: '', due_date: '' });
       await reloadCurrentPage();
       toast('Application updated');
     } catch (err) {
-      console.error('Update error (rpc):', err);
+      console.error('Update error:', err);
       setErrorMsg('Could not update application.');
       alert('Error updating: ' + (err.message || String(err)));
     } finally {
@@ -212,7 +244,7 @@ export default function Dashboard() {
     }
   }
 
-  // --- helpers / UI components ---
+  // helpers / UI parts
   const fmt = (v) => (v === null || v === undefined || v === '' ? '—' : String(v));
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
 
@@ -241,7 +273,6 @@ export default function Dashboard() {
     return <span style={badge(tone)}>{fmt(status)}</span>;
   };
 
-  // memoize counts for the header
   const counts = useMemo(() => {
     const tally = { total: total, applied: 0, interview: 0, offer: 0, rejected: 0 };
     rows.forEach((r) => {
@@ -308,7 +339,7 @@ export default function Dashboard() {
   }
   function pill(tone) { return { ...badge(tone), fontWeight: 500 }; }
 
-  // pagination helpers
+  // paging helpers
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const endIdx = Math.min(page * pageSize, total);
@@ -318,7 +349,7 @@ export default function Dashboard() {
   const onSortByChange = (e) => setSortBy(e.target.value);
   const toggleSortDir = () => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
 
-  // ---------- Small-screen card renderer ----------
+  // Small-screen card
   function AppCard({ r }) {
     const key = r.app_uuid ?? r.id ?? r.created_at;
     const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
@@ -330,7 +361,7 @@ export default function Dashboard() {
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">{fmt(r.company)}</h3>
+            <h3 className="text-lg font-semibold leading-tight text-slate-900">{fmt(r.company)}</h3>
             <p className="text-sm text-slate-600">{fmt(r.role)}</p>
           </div>
           <StatusBadge status={r.status} />
@@ -355,12 +386,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-slate-500">
-          <div>Interest: <span className="text-slate-800">{fmt(r.interest_rating)}</span></div>
-          <div>Energy: <span className="text-slate-800">{fmt(r.energy_rating)}</span></div>
-          <div>Resp. days: <span className="text-slate-800">{fmt(r.response_days)}</span></div>
-        </div>
-
+        {/* Advanced fields are not shown on the card */}
         <div className="mt-4 flex items-center gap-2">
           <button
             onClick={() => handleEdit(r)}
@@ -395,13 +421,12 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
           <div>
-            <h1 className="m-0 tracking-tight text-xl sm:text-2xl">Career Compass</h1>
+            <h1 className="m-0 tracking-tight text-2xl sm:text-3xl font-semibold">Career Compass</h1>
             <div className="text-slate-500 mt-1 text-sm">Track, sort, and refine your job hunt.</div>
           </div>
 
           {/* Clickable status badges */}
           <div className="ml-auto flex flex-wrap gap-2">
-            {/* Total = clear filter */}
             <button
               type="button"
               onClick={() => setStatusFilter('')}
@@ -459,9 +484,9 @@ export default function Dashboard() {
           style={{ ...card, padding: 14, marginBottom: 16 }}
           className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center"
         >
-          {/* Search */}
           <div className="flex items-center gap-2">
             <input
+              ref={firstInputRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search company, role, status, industry…"
@@ -474,7 +499,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sorting / Pagination (top) */}
           <div className="flex flex-wrap items-center gap-2 justify-self-end">
             <label className="text-slate-500 text-sm">Sort</label>
             <select value={sortBy} onChange={onSortByChange} style={{ ...inputStyle, width: 160, padding: 8 }}>
@@ -506,7 +530,7 @@ export default function Dashboard() {
             >
               Next ›
             </button>
-            <select value={pageSize} onChange={onPageSizeChange} style={{ ...inputStyle, width: 110, padding: 8 }}>
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ ...inputStyle, width: 110, padding: 8 }}>
               {[10, 20, 50].map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}/page
@@ -542,23 +566,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ----------- DATA RENDER ----------- */}
-        {!loading && rows.length === 0 && (
-          <div
-            className="text-slate-600 flex items-center gap-3 justify-between bg-white rounded-xl border border-slate-200 p-4"
-            style={{ boxShadow: theme.shadow }}
-          >
-            <span>No applications yet.</span>
-            <button
-              style={{ ...btn.base, ...btn.primary }}
-              onClick={() => addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            >
-              Add your first application
-            </button>
-          </div>
-        )}
-
-        {/* Cards on small screens */}
+        {/* Small-screen cards */}
         {!loading && rows.length > 0 && (
           <div className="md:hidden space-y-3">
             {rows.map((r, idx) => (
@@ -567,7 +575,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Table on md+ */}
+        {/* Table */}
         {!loading && rows.length > 0 && (
           <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
             <div style={{ overflowX: 'auto' }}>
@@ -589,9 +597,7 @@ export default function Dashboard() {
                     <th style={{ textAlign: 'left' }}>Status</th>
                     <th style={{ textAlign: 'left' }}>Next action</th>
                     <th style={{ textAlign: 'left' }}>Due</th>
-                    <th style={{ textAlign: 'left' }}>Interest</th>
-                    <th style={{ textAlign: 'left' }}>Energy</th>
-                    <th style={{ textAlign: 'left' }}>Response days</th>
+                    {/* Advanced columns hidden from the main list */}
                     <th style={{ textAlign: 'left' }}>Outcome</th>
                     <th style={{ textAlign: 'left' }}>Added</th>
                     <th style={{ textAlign: 'left' }}>Actions</th>
@@ -613,7 +619,7 @@ export default function Dashboard() {
                         onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
                       >
-                        <td>{fmt(r.company)}</td>
+                        <td><div className="text-base font-semibold leading-tight">{fmt(r.company)}</div></td>
                         <td>{fmt(r.role)}</td>
                         <td>{fmt(r.function)}</td>
                         <td>{fmt(r.industry)}</td>
@@ -622,9 +628,6 @@ export default function Dashboard() {
                           {fmt(r.next_action)}
                         </td>
                         <td><DuePill due={r.due_date} /></td>
-                        <td>{fmt(r.interest_rating)}</td>
-                        <td>{fmt(r.energy_rating)}</td>
-                        <td>{fmt(r.response_days)}</td>
                         <td>{fmt(r.outcome)}</td>
                         <td>{fmtDate(r.created_at)}</td>
                         <td>
@@ -697,6 +700,9 @@ export default function Dashboard() {
       {/* Edit Modal */}
       {editing && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit application"
           style={{
             position: 'fixed',
             inset: 0,
@@ -707,6 +713,9 @@ export default function Dashboard() {
             zIndex: 50,
             padding: 16,
           }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditing(null);
+          }}
         >
           <form
             onSubmit={handleUpdate}
@@ -715,7 +724,7 @@ export default function Dashboard() {
               padding: 22,
               borderRadius: 14,
               color: theme.text,
-              width: 460,
+              width: 520,
               maxWidth: '100%',
               display: 'grid',
               gap: 12,
@@ -723,19 +732,19 @@ export default function Dashboard() {
               boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: 18 }}>
-                {saving ? 'Saving…' : 'Edit Application'}
-              </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ margin: 0, fontSize: 18 }}>{saving ? 'Saving…' : 'Edit Application'}</h3>
               <div style={{ marginLeft: 'auto', color: theme.mutedText, fontSize: 12 }}>
                 {editing?.company ? editing.company : ''}
               </div>
             </div>
 
+            {/* Basic fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label>
                 <div className="mb-1 text-slate-500 text-sm">Company</div>
                 <input
+                  ref={firstInputRef}
                   value={form.company}
                   onChange={(e) => setForm({ ...form, company: e.target.value })}
                   style={inputStyle}
@@ -794,21 +803,75 @@ export default function Dashboard() {
               </label>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
-              <button type="button" onClick={() => setEditing(null)} style={{ ...btn.base }} disabled={saving}>
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{ ...btn.base, background: theme.success, border: `1px solid ${theme.success}`, color: theme.primaryText }}
-                disabled={saving}
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-    </main>
-  );
-}
+            {/* Advanced Settings */}
+            <details className="mt-2 border-t border-slate-200 pt-3">
+              <summary className="cursor-pointer font-medium text-slate-700">Advanced Settings</summary>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label>
+                  <div className="mb-1 text-slate-500 text-sm">Interest level (1–5)</div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={form.interest_level}
+                    onChange={(e) => setForm({ ...form, interest_level: e.target.value })}
+                    style={inputStyle}
+                    disabled={saving}
+                  />
+                </label>
+                <label>
+                  <div className="mb-1 text-slate-500 text-sm">Energy level (1–5)</div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={form.energy_level}
+                    onChange={(e) => setForm({ ...form, energy_level: e.target.value })}
+                    style={inputStyle}
+                    disabled={saving}
+                  />
+                </label>
+                <label>
+                  <div className="mb-1 text-slate-500 text-sm">Days to respond</div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={form.days_to_respond}
+                    onChange={(e) => setForm({ ...form, days_to_respond: e.target.value })}
+                    style={inputStyle}
+                    disabled={saving}
+                  />
+                </label>
+                <label>
+                  <div className="mb-1 text-slate-500 text-sm">Priority (1 high, 3 low)</div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="3"
+                    value={form.priority}
+                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                    style={inputStyle}
+                    disabled={saving}
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <div className="mb-1 text-slate-500 text-sm">Source</div>
+                  <input
+                    value={form.source}
+                    onChange={(e) => setForm({ ...form, source: e.target.value })}
+                    style={inputStyle}
+                    disabled={saving}
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <div className="mb-1 text-slate-500 text-sm">Location</div>
+                  <input
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    style={inputStyle}
+                    disabled={saving}
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <div className="mb-1 text-slate
