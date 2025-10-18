@@ -1,19 +1,24 @@
 'use server';
 import { createClient } from '@supabase/supabase-js';
 
-// Server-only client (service role). Do NOT import this file in client components.
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
 export async function updateApplication(input) {
   try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    // Guard against missing envs in production
+    if (!url || !serviceKey) {
+      console.error('Missing Supabase envs', { hasUrl: !!url, hasServiceKey: !!serviceKey });
+      return { ok: false, message: 'Server misconfigured: Supabase env vars missing.' };
+    }
+
+    // Create server-only client inside the function, so missing envs don’t crash module load
+    const supabase = createClient(url, serviceKey);
+
     // Helpers
     const numOrNull = (v) => (v === '' || v == null ? null : Number(v));
     const isoOrNull = (d) => (d ? new Date(d).toISOString() : null);
 
-    // Build safe patch
     const patch = {
       company: input.company?.trim(),
       role: input.role?.trim(),
@@ -30,7 +35,6 @@ export async function updateApplication(input) {
       last_touch: new Date().toISOString(),
     };
 
-    // Drop undefined so we never send unknown columns
     const filtered = Object.fromEntries(
       Object.entries(patch).filter(([, v]) => v !== undefined)
     );
@@ -44,7 +48,6 @@ export async function updateApplication(input) {
 
     if (error) {
       console.error('Supabase update error:', error, { filtered, app_uuid: input.app_uuid });
-      // Do NOT throw — return a serializable error object
       return {
         ok: false,
         message: error.message || 'Update failed',
