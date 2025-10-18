@@ -203,46 +203,73 @@ export default function Dashboard() {
     };
   }, [editing]);
 
-  // Save via server action
-  async function handleUpdate(e) {
-    e.preventDefault();
-    if (!editing?.app_uuid) {
-      alert('Missing app_uuid; cannot update safely.');
+// Save via server action (fixed: show real server message, don't throw into render)
+async function handleUpdate(e) {
+  e.preventDefault();
+  if (!editing?.app_uuid) {
+    toast('Missing app_uuid; cannot update safely.');
+    return;
+  }
+
+  setSaving(true);
+  setErrorMsg('');
+
+  // helper to coerce numeric inputs safely
+  const numOrNull = (v, fallbackNull = true) => {
+    if (v === '' || v == null) return fallbackNull ? null : undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  try {
+    const payload = {
+      app_uuid: editing.app_uuid,
+      company: form.company,
+      role: form.role,
+      status: form.status,
+      next_action: form.next_action || null,
+      due_date: form.due_date || null, // server action should ISO-normalize
+      interest_level: numOrNull(form.interest_level),
+      energy_level: numOrNull(form.energy_level),
+      days_to_respond: numOrNull(form.days_to_respond),
+      notes_private: form.notes_private || null,
+      source: form.source || null,
+      location: form.location || null,
+      priority: numOrNull(form.priority, false) ?? 2, // default 2 if empty/NaN
+    };
+
+    const res = await updateApplication(payload);
+    console.debug('updateApplication result:', res);
+
+    // Handle both shapes: { ok, message } OR { error: {...} }
+    if (res?.ok === false) {
+      const msg = res?.message || res?.hint || 'Update failed';
+      console.error('Update failed (server action):', res);
+      setErrorMsg(msg);
+      toast(msg);
       return;
     }
-    setSaving(true);
-    setErrorMsg('');
-    try {
-      const payload = {
-        app_uuid: editing.app_uuid,
-        company: form.company,
-        role: form.role,
-        status: form.status,
-        next_action: form.next_action || null,
-        due_date: form.due_date || null,
-        interest_level: form.interest_level === '' ? null : Number(form.interest_level),
-        energy_level: form.energy_level === '' ? null : Number(form.energy_level),
-        days_to_respond: form.days_to_respond === '' ? null : Number(form.days_to_respond),
-        notes_private: form.notes_private || null,
-        source: form.source || null,
-        location: form.location || null,
-        priority: form.priority === '' ? 2 : Number(form.priority),
-      };
-
-      const { error } = await updateApplication(payload);
-      if (error) throw error;
-
-      setEditing(null);
-      await reloadCurrentPage();
-      toast('Application updated');
-    } catch (err) {
-      console.error('Update error:', err);
-      setErrorMsg('Could not update application.');
-      alert('Error updating: ' + (err.message || String(err)));
-    } finally {
-      setSaving(false);
+    if (res?.error) {
+      const msg = res.error?.message || res.error?.hint || 'Update failed';
+      console.error('Supabase update error:', res.error);
+      setErrorMsg(msg);
+      toast(msg);
+      return;
     }
+
+    // Success
+    setEditing(null);
+    await reloadCurrentPage();
+    toast('Application updated');
+  } catch (err) {
+    const msg = err?.message || err?.cause?.message || 'Could not update application.';
+    console.error('Update error (catch):', err);
+    setErrorMsg(msg);
+    toast(msg);
+  } finally {
+    setSaving(false);
   }
+}
 
   // helpers / UI parts
   const fmt = (v) => (v === null || v === undefined || v === '' ? '—' : String(v));
