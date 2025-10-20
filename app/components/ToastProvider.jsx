@@ -4,14 +4,14 @@ import { createPortal } from 'react-dom';
 
 const ToastContext = createContext(null);
 
-const DEFAULT_DURATION = 3500; // a bit longer so it’s readable
+const DEFAULT_DURATION = 3500; // readable but snappy
 
-// Higher-contrast styles
+// Higher-contrast styles with subtle colored shadows
 const VARIANT_STYLES = {
-  success: 'bg-emerald-600 text-white border-emerald-700',
-  error:   'bg-rose-600 text-white border-rose-700',
-  info:    'bg-slate-900 text-white border-slate-800',
-  warning: 'bg-amber-500 text-white border-amber-600',
+  success: 'bg-emerald-600 text-white border-emerald-700 shadow-lg shadow-emerald-800/30',
+  error:   'bg-rose-600 text-white border-rose-700 shadow-lg shadow-rose-800/30',
+  info:    'bg-slate-900 text-slate-50 border-slate-700 shadow-lg shadow-black/40',
+  warning: 'bg-amber-500 text-white border-amber-600 shadow-lg shadow-amber-800/30',
 };
 
 const VARIANT_ICON = {
@@ -22,18 +22,31 @@ const VARIANT_ICON = {
 };
 
 export function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([]); // { id, message, variant }
+  // each toast: { id, message, variant }
+  const [toasts, setToasts] = useState([]);
+  const [leaving, setLeaving] = useState(new Set()); // ids currently animating out
   const idRef = useRef(1);
-  const timersRef = useRef(new Map()); // id -> timeout
+  const timersRef = useRef(new Map()); // id -> timeout for auto-dismiss
 
-  const remove = useCallback((id) => {
+  const actuallyRemove = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+    setLeaving((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     const handle = timersRef.current.get(id);
     if (handle) {
       clearTimeout(handle);
       timersRef.current.delete(id);
     }
   }, []);
+
+  const remove = useCallback((id) => {
+    // trigger exit animation, then remove after 160ms
+    setLeaving((prev) => new Set(prev).add(id));
+    setTimeout(() => actuallyRemove(id), 160);
+  }, [actuallyRemove]);
 
   const push = useCallback((message, { variant = 'info', duration = DEFAULT_DURATION } = {}) => {
     const id = idRef.current++;
@@ -52,7 +65,7 @@ export function ToastProvider({ children }) {
     base.warning = (msg, opts) => push(msg, { ...opts, variant: 'warning' });
     base.dismiss = (id) => remove(id);
 
-    // fromPromise: show loading msg, then replace with success/error
+    // Show a loading toast, then replace with success/error based on the promise result
     base.fromPromise = async (promise, { loading = 'Working…', success = 'Done', error = 'Something went wrong' } = {}) => {
       const loadingId = push(loading, { variant: 'info', duration: 8000 });
       try {
@@ -81,6 +94,19 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ toast: api.current }}>
       {children}
 
+      {/* Global keyframes for enter/exit animations */}
+      <style jsx global>{`
+        @keyframes toast-in {
+          from { opacity: 0; transform: translateY(8px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+        @keyframes toast-out {
+          to   { opacity: 0; transform: translateY(8px) scale(0.98); }
+        }
+        .toast-enter { animation: toast-in 160ms ease-out both; }
+        .toast-leave { animation: toast-out 160ms ease-in both; }
+      `}</style>
+
       {typeof window !== 'undefined' &&
         createPortal(
           <div
@@ -91,7 +117,7 @@ export function ToastProvider({ children }) {
               <div
                 key={t.id}
                 role="status"
-                className={`pointer-events-auto rounded-xl border px-4 py-3 text-sm shadow-lg ring-1 ring-black/5 flex items-center gap-3 font-medium ${VARIANT_STYLES[t.variant]}`}
+                className={`pointer-events-auto rounded-lg border px-4 py-3 text-[15px] leading-snug font-semibold tracking-tight flex items-center gap-3 ${VARIANT_STYLES[t.variant]} ${leaving.has(t.id) ? 'toast-leave' : 'toast-enter'}`}
               >
                 <span aria-hidden="true" className="text-base opacity-90">{VARIANT_ICON[t.variant] || 'ℹ︎'}</span>
                 <span>{t.message}</span>
