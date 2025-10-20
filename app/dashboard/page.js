@@ -180,7 +180,6 @@ export default function Dashboard() {
       due_date: row.due_date ? toDateInput(row.due_date) : '',
       // Advanced prefill
       interest_level: row.interest_level ?? '',
-      energy_level: row.energy_level ?? '',
       days_to_respond: row.days_to_respond ?? '',
       notes: row.notes ?? '',
       notes_private: row.notes_private ?? '',
@@ -230,7 +229,6 @@ async function handleUpdate(e) {
     status: form.status,
     next_action: form.next_action || null,
     due_date: form.due_date || null, // server action should ISO-normalize
-    energy_level: numOrNull(form.energy_level),
     priority: numOrNull(form.priority, false) ?? 2, // default 2 if empty/NaN
     source: form.source || null,
     location: form.location || null,
@@ -837,31 +835,13 @@ async function handleUpdate(e) {
         </label>
       </div>
 
-     {/* Advanced Settings */}
+{/* Advanced Settings */}
 <details className="mt-2 border-t border-slate-200 pt-3">
   <summary className="cursor-pointer font-medium text-slate-700">
     Advanced Settings
   </summary>
 
   <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Energy level (1–5)</div>
-      <input
-        type="number"
-        min={1}
-        max={5}
-        value={form.energy_level ?? ''}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            energy_level: e.target.valueAsNumber || 1,
-          })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
     <label>
       <div className="mb-1 text-slate-500 text-sm">Priority (1 high, 3 low)</div>
       <input
@@ -874,18 +854,6 @@ async function handleUpdate(e) {
             ...form,
             priority: e.target.valueAsNumber || 1,
           })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Source</div>
-      <input
-        value={form.source ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, source: e.target.value || '' })
         }
         style={inputStyle}
         disabled={saving}
