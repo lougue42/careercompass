@@ -223,21 +223,19 @@ async function handleUpdate(e) {
   };
 
   try {
-    const payload = {
-      app_uuid: editing.app_uuid,
-      company: form.company,
-      role: form.role,
-      status: form.status,
-      next_action: form.next_action || null,
-      due_date: form.due_date || null, // server action should ISO-normalize
-      interest_level: numOrNull(form.interest_level),
-      energy_level: numOrNull(form.energy_level),
-      days_to_respond: numOrNull(form.days_to_respond),
-      notes_private: form.notes_private || null,
-      source: form.source || null,
-      location: form.location || null,
-      priority: numOrNull(form.priority, false) ?? 2, // default 2 if empty/NaN
-    };
+  const payload = {
+    app_uuid: editing.app_uuid,
+    company: form.company,
+    role: form.role,
+    status: form.status,
+    next_action: form.next_action || null,
+    due_date: form.due_date || null, // server action should ISO-normalize
+    energy_level: numOrNull(form.energy_level),
+    priority: numOrNull(form.priority, false) ?? 2, // default 2 if empty/NaN
+    source: form.source || null,
+    location: form.location || null,
+    notes: form.notes || null, // ✅ keep this
+  };
 
     const res = await updateApplication(payload);
     console.debug('updateApplication result:', res);
