@@ -4,12 +4,14 @@ import { createPortal } from 'react-dom';
 
 const ToastContext = createContext(null);
 
-const DEFAULT_DURATION = 2600;
+const DEFAULT_DURATION = 3500; // a bit longer so it’s readable
+
+// Higher-contrast styles
 const VARIANT_STYLES = {
-  success: 'border-green-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-100',
-  error:   'border-red-200 bg-rose-50 text-rose-900 dark:bg-rose-900/20 dark:text-rose-100',
-  info:    'border-slate-200 bg-white/80 text-slate-900 dark:bg-white/10 dark:text-slate-100',
-  warning: 'border-amber-200 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-100',
+  success: 'bg-emerald-600 text-white border-emerald-700',
+  error:   'bg-rose-600 text-white border-rose-700',
+  info:    'bg-slate-900 text-white border-slate-800',
+  warning: 'bg-amber-500 text-white border-amber-600',
 };
 
 const VARIANT_ICON = {
@@ -82,21 +84,21 @@ export function ToastProvider({ children }) {
       {typeof window !== 'undefined' &&
         createPortal(
           <div
-            className="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"
+            className="fixed bottom-6 right-6 z-50 space-y-3 pointer-events-none"
             aria-live="polite"
           >
             {toasts.map((t) => (
               <div
                 key={t.id}
                 role="status"
-                className={`pointer-events-auto rounded-xl border px-4 py-2 text-sm shadow-md backdrop-blur flex items-center gap-3 ${VARIANT_STYLES[t.variant]}`}
+                className={`pointer-events-auto rounded-xl border px-4 py-3 text-sm shadow-lg ring-1 ring-black/5 flex items-center gap-3 font-medium ${VARIANT_STYLES[t.variant]}`}
               >
-                <span aria-hidden="true" className="text-base">{VARIANT_ICON[t.variant] || 'ℹ︎'}</span>
+                <span aria-hidden="true" className="text-base opacity-90">{VARIANT_ICON[t.variant] || 'ℹ︎'}</span>
                 <span>{t.message}</span>
                 <button
                   onClick={() => remove(t.id)}
                   aria-label="Dismiss notification"
-                  className="ml-auto opacity-70 hover:opacity-100 transition"
+                  className="ml-auto opacity-80 hover:opacity-100 transition"
                 >
                   ×
                 </button>
