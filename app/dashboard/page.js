@@ -564,31 +564,39 @@ async function handleUpdate(e) {
           </div>
         </div>
 
-        {/* Add form card */}
-        <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
-          <AddApplicationForm
-            onCreated={async () => {
-              await reloadCurrentPage();
-              toast('Application added');
-            }}
-          />
-        </div>
+     {/* Add form card */}
+     <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
+       <AddApplicationForm
+      
+        onCreated={async (result) => {
+         try {
+            // Reload to show the new record
+            await reloadCurrentPage();
+           // Success feedback
+            toast.success('Application created');
+          } catch (err) {
+            console.error(err);
+            toast.error('Failed to reload applications');
+          }
+        }}
+       />
+     </div>
 
-        {/* Error banner */}
-        {errorMsg && (
-          <div
-            style={{
-              background: theme.errorBg,
-              color: theme.errorText,
-              border: `1px solid ${theme.errorBorder}`,
-              borderRadius: 10,
-              padding: 12,
-              marginBottom: 12,
-            }}
-          >
-            {errorMsg}
-          </div>
-        )}
+     {/* Error banner */}
+     {errorMsg && (
+       <div
+         style={{
+           background: theme.errorBg,
+           color: theme.errorText,
+           border: `1px solid ${theme.errorBorder}`,
+           borderRadius: 10,
+           padding: 12,
+           marginBottom: 12,
+         }}
+       >
+         {errorMsg}
+       </div>
+     )}
 
         {/* Small-screen cards */}
         {!loading && rows.length > 0 && (

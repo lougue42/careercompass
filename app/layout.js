@@ -32,9 +32,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen overflow-x-hidden text-slate-900`}
       >
-        <div className="mx-auto max-w-6xl px-4 py-6">
-          <ToastProvider>{children}</ToastProvider>
-        </div>
+        <ToastProvider>
+          <div className="mx-auto max-w-6xl px-4 py-6">{children}</div>
+        </ToastProvider>
       </body>
     </html>
   );
