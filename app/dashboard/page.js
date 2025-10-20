@@ -182,6 +182,7 @@ export default function Dashboard() {
       interest_level: row.interest_level ?? '',
       energy_level: row.energy_level ?? '',
       days_to_respond: row.days_to_respond ?? '',
+      notes: row.notes ?? '',
       notes_private: row.notes_private ?? '',
       source: row.source ?? '',
       location: row.location ?? '',
@@ -724,221 +725,289 @@ async function handleUpdate(e) {
         )}
       </div>
 
-      {/* Edit Modal */}
-      {editing && (
+     {/* Edit Modal */}
+{editing && (
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="Edit application"
+    style={{
+      position: 'fixed',
+      inset: 0,
+      background: theme.overlay,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 50,
+      padding: 16,
+    }}
+    onClick={(e) => {
+      if (e.target === e.currentTarget) setEditing(null);
+    }}
+  >
+    <form
+      onSubmit={handleUpdate}
+      style={{
+        background: theme.card,
+        padding: 22,
+        borderRadius: 14,
+        color: theme.text,
+        width: 520,
+        maxWidth: '100%',
+        display: 'grid',
+        gap: 12,
+        border: `1px solid ${theme.border}`,
+        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h3 style={{ margin: 0, fontSize: 18 }}>
+          {saving ? 'Saving…' : 'Edit Application'}
+        </h3>
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Edit application"
           style={{
-            position: 'fixed',
-            inset: 0,
-            background: theme.overlay,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            padding: 16,
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setEditing(null);
+            marginLeft: 'auto',
+            color: theme.mutedText,
+            fontSize: 12,
           }}
         >
-          <form
-            onSubmit={handleUpdate}
-            style={{
-              background: theme.card,
-              padding: 22,
-              borderRadius: 14,
-              color: theme.text,
-              width: 520,
-              maxWidth: '100%',
-              display: 'grid',
-              gap: 12,
-              border: `1px solid ${theme.border}`,
-              boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h3 style={{ margin: 0, fontSize: 18 }}>{saving ? 'Saving…' : 'Edit Application'}</h3>
-              <div style={{ marginLeft: 'auto', color: theme.mutedText, fontSize: 12 }}>
-                {editing?.company ? editing.company : ''}
-              </div>
-            </div>
-
-            {/* Basic fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label>
-                <div className="mb-1 text-slate-500 text-sm">Company</div>
-                <input
-                  ref={firstInputRef}
-                  value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value })}
-                  style={inputStyle}
-                  disabled={saving}
-                  placeholder="Company name"
-                />
-              </label>
-
-              <label>
-                <div className="mb-1 text-slate-500 text-sm">Role</div>
-                <input
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  style={inputStyle}
-                  disabled={saving}
-                  placeholder="Job title"
-                />
-              </label>
-
-              <label>
-                <div className="mb-1 text-slate-500 text-sm">Status</div>
-                <select
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  style={inputStyle}
-                  disabled={saving}
-                >
-                  <option>Applied</option>
-                  <option>Interview</option>
-                  <option>Offer</option>
-                  <option>Rejected</option>
-                  <option>Wishlist</option>
-                </select>
-              </label>
-
-              <label>
-                <div className="mb-1 text-slate-500 text-sm">Due date</div>
-                <input
-                  type="date"
-                  value={form.due_date}
-                  onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                  style={inputStyle}
-                  disabled={saving}
-                />
-              </label>
-
-              <label className="sm:col-span-2">
-                <div className="mb-1 text-slate-500 text-sm">Next action</div>
-                <input
-                  value={form.next_action}
-                  onChange={(e) => setForm({ ...form, next_action: e.target.value })}
-                  style={inputStyle}
-                  disabled={saving}
-                  placeholder="Email recruiter on Friday"
-                />
-              </label>
-            </div>
-
-           {/* Advanced Settings */}
-<details className="mt-2 border-t border-slate-200 pt-3">
-  <summary className="cursor-pointer font-medium text-slate-700">
-    Advanced Settings
-  </summary>
-
-  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Interest level (1-5)</div>
-      <input
-        type="number"
-        min={1}
-        max={5}
-        value={form.interest_level ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, interest_level: e.target.valueAsNumber || 1 })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Energy level (1-5)</div>
-      <input
-        type="number"
-        min={1}
-        max={5}
-        value={form.energy_level ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, energy_level: e.target.valueAsNumber || 1 })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Days to respond</div>
-      <input
-        type="number"
-        min={0}
-        max={60}
-        value={form.days_to_respond ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, days_to_respond: e.target.valueAsNumber || 0 })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Priority (1 high, 3 low)</div>
-      <input
-        type="number"
-        min={1}
-        max={3}
-        value={form.priority ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, priority: e.target.valueAsNumber || 1 })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Source</div>
-      <input
-        value={form.source ?? ''}
-        onChange={(e) => setForm({ ...form, source: e.target.value })}
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Location</div>
-      <input
-        value={form.location ?? ''}
-        onChange={(e) => setForm({ ...form, location: e.target.value })}
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Notes</div>
-      <input
-        value={form.notes ?? ''}
-        onChange={(e) => setForm({ ...form, notes: e.target.value })}
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-  </div>
-</details>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button type="button" onClick={() => setEditing(null)} style={{ ...btn.base }}>
-                Cancel
-              </button>
-              <button type="submit" disabled={saving} style={{ ...btn.base, ...btn.primary }}>
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </form>
+          {editing?.company || ''}
         </div>
-      )}
-    </main>
-  );
+      </div>
+
+      {/* Basic fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Company</div>
+          <input
+            ref={firstInputRef}
+            value={form.company}
+            onChange={(e) => setForm({ ...form, company: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+            placeholder="Company name"
+          />
+        </label>
+
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Role</div>
+          <input
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+            placeholder="Job title"
+          />
+        </label>
+
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Status</div>
+          <select
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+          >
+            <option>Applied</option>
+            <option>Interview</option>
+            <option>Offer</option>
+            <option>Rejected</option>
+            <option>Wishlist</option>
+          </select>
+        </label>
+
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Due date</div>
+          <input
+            type="date"
+            value={form.due_date}
+            onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="sm:col-span-2">
+          <div className="mb-1 text-slate-500 text-sm">Next action</div>
+          <input
+            value={form.next_action}
+            onChange={(e) => setForm({ ...form, next_action: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+            placeholder="Email recruiter on Friday"
+          />
+        </label>
+      </div>
+
+      {/* Advanced Settings */}
+      <details className="mt-2 border-t border-slate-200 pt-3">
+        <summary className="cursor-pointer font-medium text-slate-700">
+          Advanced Settings
+        </summary>
+
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">
+              Interest level (1–5)
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={5}
+              value={form.interest_level ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  interest_level: e.target.valueAsNumber || 1,
+                })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">
+              Energy level (1–5)
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={5}
+              value={form.energy_level ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  energy_level: e.target.valueAsNumber || 1,
+                })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">Days to respond</div>
+            <input
+              type="number"
+              min={0}
+              max={60}
+              value={form.days_to_respond ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  days_to_respond: e.target.valueAsNumber || 0,
+                })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">
+              Priority (1 high, 3 low)
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={3}
+              value={form.priority ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  priority: e.target.valueAsNumber || 1,
+                })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label className="sm:col-span-2">
+            <div className="mb-1 text-slate-500 text-sm">Source</div>
+            <input
+              value={form.source ?? ''}
+              onChange={(e) =>
+                setForm({ ...form, source: e.target.value || '' })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label className="sm:col-span-2">
+            <div className="mb-1 text-slate-500 text-sm">Location</div>
+            <input
+              value={form.location ?? ''}
+              onChange={(e) =>
+                setForm({ ...form, location: e.target.value || '' })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          {/* Notes (public) */}
+          <label className="sm:col-span-2">
+            <div className="mb-1 text-slate-500 text-sm">Notes</div>
+            <textarea
+              value={form.notes ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, notes: e.target.value || '' }))
+              }
+              style={inputStyle}
+              rows={3}
+              disabled={saving}
+            />
+          </label>
+
+          {/* Private Notes */}
+          <label className="sm:col-span-2">
+            <div className="mb-1 text-slate-500 text-sm">Private Notes</div>
+            <textarea
+              value={form.notes_private ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  notes_private: e.target.value || '',
+                }))
+              }
+              style={inputStyle}
+              rows={3}
+              disabled={saving}
+            />
+          </label>
+        </div>
+      </details>
+
+         {/* Action buttons */}
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: 8,
+        marginTop: 8,
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setEditing(null)}
+        style={{ ...btn.base }}
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        disabled={saving}
+        style={{ ...btn.base, ...btn.primary }}
+      >
+        {saving ? 'Saving…' : 'Save'}
+      </button>
+    </div>
+  </form>
+</div>
+)}
+</main>
+);
 }

@@ -6,32 +6,42 @@ export async function updateApplication(input) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Guard against missing envs in production
     if (!url || !serviceKey) {
       console.error('Missing Supabase envs', { hasUrl: !!url, hasServiceKey: !!serviceKey });
       return { ok: false, message: 'Server misconfigured: Supabase env vars missing.' };
     }
 
-    // Create server-only client inside the function, so missing envs don’t crash module load
     const supabase = createClient(url, serviceKey);
 
     // Helpers
     const numOrNull = (v) => (v === '' || v == null ? null : Number(v));
     const isoOrNull = (d) => (d ? new Date(d).toISOString() : null);
+    const strOrNull = (v) => {
+      if (v == null) return null;
+      const s = String(v).trim();
+      return s === '' ? null : s;
+    };
 
     const patch = {
-      company: input.company?.trim(),
-      role: input.role?.trim(),
+      company: strOrNull(input.company),
+      role: strOrNull(input.role),
       status: input.status ?? null,
-      next_action: input.next_action ?? null,
+      next_action: strOrNull(input.next_action),
       due_date: isoOrNull(input.due_date),
+
+      // Advanced
       interest_level: numOrNull(input.interest_level),
       energy_level: numOrNull(input.energy_level),
       days_to_respond: numOrNull(input.days_to_respond),
-      notes_private: input.notes_private ?? null,
-      source: input.source ?? null,
-      location: input.location ?? null,
       priority: numOrNull(input.priority),
+
+      source: strOrNull(input.source),
+      location: strOrNull(input.location),
+
+      // Notes
+      notes: strOrNull(input.notes),                 // ✅ now persisted
+      notes_private: strOrNull(input.notes_private), // ✅ already present, normalized
+
       last_touch: new Date().toISOString(),
     };
 
