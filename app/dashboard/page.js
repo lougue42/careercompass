@@ -839,147 +839,88 @@ async function handleUpdate(e) {
         </label>
       </div>
 
-      {/* Advanced Settings */}
-      <details className="mt-2 border-t border-slate-200 pt-3">
-        <summary className="cursor-pointer font-medium text-slate-700">
-          Advanced Settings
-        </summary>
+     {/* Advanced Settings */}
+<details className="mt-2 border-t border-slate-200 pt-3">
+  <summary className="cursor-pointer font-medium text-slate-700">
+    Advanced Settings
+  </summary>
 
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label>
-            <div className="mb-1 text-slate-500 text-sm">
-              Interest level (1–5)
-            </div>
-            <input
-              type="number"
-              min={1}
-              max={5}
-              value={form.interest_level ?? ''}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  interest_level: e.target.valueAsNumber || 1,
-                })
-              }
-              style={inputStyle}
-              disabled={saving}
-            />
-          </label>
+  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <label>
+      <div className="mb-1 text-slate-500 text-sm">Energy level (1–5)</div>
+      <input
+        type="number"
+        min={1}
+        max={5}
+        value={form.energy_level ?? ''}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            energy_level: e.target.valueAsNumber || 1,
+          })
+        }
+        style={inputStyle}
+        disabled={saving}
+      />
+    </label>
 
-          <label>
-            <div className="mb-1 text-slate-500 text-sm">
-              Energy level (1–5)
-            </div>
-            <input
-              type="number"
-              min={1}
-              max={5}
-              value={form.energy_level ?? ''}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  energy_level: e.target.valueAsNumber || 1,
-                })
-              }
-              style={inputStyle}
-              disabled={saving}
-            />
-          </label>
+    <label>
+      <div className="mb-1 text-slate-500 text-sm">Priority (1 high, 3 low)</div>
+      <input
+        type="number"
+        min={1}
+        max={3}
+        value={form.priority ?? ''}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            priority: e.target.valueAsNumber || 1,
+          })
+        }
+        style={inputStyle}
+        disabled={saving}
+      />
+    </label>
 
-          <label>
-            <div className="mb-1 text-slate-500 text-sm">Days to respond</div>
-            <input
-              type="number"
-              min={0}
-              max={60}
-              value={form.days_to_respond ?? ''}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  days_to_respond: e.target.valueAsNumber || 0,
-                })
-              }
-              style={inputStyle}
-              disabled={saving}
-            />
-          </label>
+    <label className="sm:col-span-2">
+      <div className="mb-1 text-slate-500 text-sm">Source</div>
+      <input
+        value={form.source ?? ''}
+        onChange={(e) =>
+          setForm({ ...form, source: e.target.value || '' })
+        }
+        style={inputStyle}
+        disabled={saving}
+      />
+    </label>
 
-          <label>
-            <div className="mb-1 text-slate-500 text-sm">
-              Priority (1 high, 3 low)
-            </div>
-            <input
-              type="number"
-              min={1}
-              max={3}
-              value={form.priority ?? ''}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  priority: e.target.valueAsNumber || 1,
-                })
-              }
-              style={inputStyle}
-              disabled={saving}
-            />
-          </label>
+    <label className="sm:col-span-2">
+      <div className="mb-1 text-slate-500 text-sm">Location</div>
+      <input
+        value={form.location ?? ''}
+        onChange={(e) =>
+          setForm({ ...form, location: e.target.value || '' })
+        }
+        style={inputStyle}
+        disabled={saving}
+      />
+    </label>
 
-          <label className="sm:col-span-2">
-            <div className="mb-1 text-slate-500 text-sm">Source</div>
-            <input
-              value={form.source ?? ''}
-              onChange={(e) =>
-                setForm({ ...form, source: e.target.value || '' })
-              }
-              style={inputStyle}
-              disabled={saving}
-            />
-          </label>
-
-          <label className="sm:col-span-2">
-            <div className="mb-1 text-slate-500 text-sm">Location</div>
-            <input
-              value={form.location ?? ''}
-              onChange={(e) =>
-                setForm({ ...form, location: e.target.value || '' })
-              }
-              style={inputStyle}
-              disabled={saving}
-            />
-          </label>
-
-          {/* Notes (public) */}
-          <label className="sm:col-span-2">
-            <div className="mb-1 text-slate-500 text-sm">Notes</div>
-            <textarea
-              value={form.notes ?? ''}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, notes: e.target.value || '' }))
-              }
-              style={inputStyle}
-              rows={3}
-              disabled={saving}
-            />
-          </label>
-
-          {/* Private Notes */}
-          <label className="sm:col-span-2">
-            <div className="mb-1 text-slate-500 text-sm">Private Notes</div>
-            <textarea
-              value={form.notes_private ?? ''}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  notes_private: e.target.value || '',
-                }))
-              }
-              style={inputStyle}
-              rows={3}
-              disabled={saving}
-            />
-          </label>
-        </div>
-      </details>
+    {/* Notes */}
+    <label className="sm:col-span-2">
+      <div className="mb-1 text-slate-500 text-sm">Notes</div>
+      <textarea
+        value={form.notes ?? ''}
+        onChange={(e) =>
+          setForm((f) => ({ ...f, notes: e.target.value || '' }))
+        }
+        style={inputStyle}
+        rows={3}
+        disabled={saving}
+      />
+    </label>
+  </div>
+</details>
 
          {/* Action buttons */}
     <div
