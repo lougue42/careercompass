@@ -22,6 +22,7 @@ export async function updateApplication(input) {
       return s === '' ? null : s;
     };
 
+    // Only include columns that still exist in your table
     const patch = {
       company: strOrNull(input.company),
       role: strOrNull(input.role),
@@ -30,21 +31,16 @@ export async function updateApplication(input) {
       due_date: isoOrNull(input.due_date),
 
       // Advanced
-      interest_level: numOrNull(input.interest_level),
-      energy_level: numOrNull(input.energy_level),
-      days_to_respond: numOrNull(input.days_to_respond),
       priority: numOrNull(input.priority),
-
-      source: strOrNull(input.source),
       location: strOrNull(input.location),
 
       // Notes
-      notes: strOrNull(input.notes),                 // ✅ now persisted
-      notes_private: strOrNull(input.notes_private), // ✅ already present, normalized
+      notes: strOrNull(input.notes),
 
       last_touch: new Date().toISOString(),
     };
 
+    // Filter out undefined values
     const filtered = Object.fromEntries(
       Object.entries(patch).filter(([, v]) => v !== undefined)
     );
