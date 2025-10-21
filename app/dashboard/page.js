@@ -39,22 +39,27 @@ export default function Dashboard() {
   const [deletingId, setDeletingId] = useState(null);
 
   const [form, setForm] = useState({
-  company: '',
-  role: '',
-  status: '',
-  next_action: '',
-  due_date: '',
-  // Advanced
-  interest_level: '',
-  energy_level: '',
-  days_to_respond: '',
-  notes_private: '',
-  source: '',
-  location: '',
-  function: '',   // added
-  outcome: '',    // added
-  priority: '2',
-});
+    company: '',
+    role: '',
+    status: '',
+    next_action: '',
+    due_date: '',
+    // Advanced
+    interest_level: '',
+    energy_level: '',
+    days_to_respond: '',
+    notes: '',            // added to match handleEdit
+    notes_private: '',
+    source: '',
+    location: '',
+    function: '',
+    outcome: '',
+    priority: '2',
+  });
+
+  // Edit modal state
+  const [editing, setEditing] = useState(null); // null | row being edited
+  const [saving, setSaving] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -179,6 +184,7 @@ export default function Dashboard() {
       due_date: row.due_date ? toDateInput(row.due_date) : '',
       // Advanced prefill
       interest_level: row.interest_level ?? '',
+      energy_level: row.energy_level ?? '',
       days_to_respond: row.days_to_respond ?? '',
       notes: row.notes ?? '',
       notes_private: row.notes_private ?? '',
@@ -186,8 +192,7 @@ export default function Dashboard() {
       location: row.location ?? '',
       priority: String(row.priority ?? 2),
       function: row.function ?? '',
-outcome: row.outcome ?? '',
-
+      outcome: row.outcome ?? '',
     });
   }
 
@@ -204,7 +209,6 @@ outcome: row.outcome ?? '',
       window.removeEventListener('keydown', onKey);
     };
   }, [editing]);
-
 // Save via server action (fixed: show real server message, don't throw into render)
 async function handleUpdate(e) {
   e.preventDefault();
