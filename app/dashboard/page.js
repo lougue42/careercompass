@@ -541,131 +541,330 @@ const isPastDate = (s) => {
       </div>
     );
   }
-
-  return (
-    <main
-      style={{
-        background: theme.bg,
-        minHeight: '100vh',
-        padding: 16,
-        fontFamily: 'system-ui, -apple-system',
-        color: theme.text,
-      }}
-    >
-      <div className="max-w-6xl mx-auto w-full px-2 sm:px-4 md:px-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
-          <div>
-            <h1 className="m-0 tracking-tight text-2xl sm:text-3xl font-semibold">Career Compass</h1>
-            <div className="text-slate-500 mt-1 text-sm">Track, sort, and refine your job hunt.</div>
-          </div>
-
-          {/* Clickable status badges */}
-          <div className="ml-auto flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('')}
-              style={{
-                ...badge('neutral'),
-                ...(statusFilter === '' ? { boxShadow: 'inset 0 0 0 2px rgba(15,23,42,0.15)' } : {}),
-                cursor: 'pointer'
-              }}
-              aria-pressed={statusFilter === ''}
-              title="Show all"
-            >
-              Total: {counts.total}
-            </button>
-
-            {[
-              { label: 'Applied', tone: 'info', count: counts.applied },
-              { label: 'Interview', tone: 'primary', count: counts.interview },
-              { label: 'Offer', tone: 'success', count: counts.offer },
-              { label: 'Rejected', tone: 'danger', count: counts.rejected },
-            ].map(({ label, tone, count }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => setStatusFilter((curr) => (curr === label ? '' : label))}
-                style={{
-                  ...badge(tone),
-                  ...(statusFilter === label ? { boxShadow: 'inset 0 0 0 2px rgba(15,23,42,0.15)' } : {}),
-                  cursor: 'pointer'
-                }}
-                aria-pressed={statusFilter === label}
-                title={`Filter by ${label}`}
-              >
-                {label}: {count}
-              </button>
-            ))}
+return (
+  <main
+    style={{
+      background: theme.bg,
+      minHeight: '100vh',
+      padding: 16,
+      fontFamily: 'system-ui, -apple-system',
+      color: theme.text,
+    }}
+  >
+    <div className="max-w-6xl mx-auto w-full px-2 sm:px-4 md:px-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-5">
+        <div>
+          <h1 className="m-0 tracking-tight text-2xl sm:text-3xl font-semibold">
+            Career Compass
+          </h1>
+          <div className="text-slate-500 mt-1 text-sm">
+            Track, sort, and refine your job hunt.
           </div>
         </div>
+        {/* right-side controls (optional) */}
+        {/* <div className="flex items-center gap-3">...</div> */}
+      </div>
 
-        {/* Active filter chip */}
-        {statusFilter && (
-          <div className="mb-2 text-sm text-slate-600 flex items-center gap-2">
-            <span>Filtered by:</span>
-            <button
-              onClick={() => setStatusFilter('')}
-              className="rounded-full border border-slate-300 px-2 py-1"
-              title="Clear filter"
-            >
-              {statusFilter} ✕
-            </button>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div
-          style={{ ...card, padding: 14, marginBottom: 16 }}
-          className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center"
+      {/* Clickable status badges */}
+      <div className="ml-auto flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setStatusFilter('')}
+          style={{
+            ...badge('neutral'),
+            ...(statusFilter === ''
+              ? { boxShadow: 'inset 0 0 0 2px rgba(15,23,42,0.15)' }
+              : {}),
+            cursor: 'pointer',
+          }}
+          aria-pressed={statusFilter === ''}
+          title="Show all"
         >
-          <div className="flex items-center gap-2">
-            <input
-              ref={firstInputRef}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search company, role, status, industry…"
-              style={{ ...inputStyle }}
-            />
-            {search && (
-              <button onClick={() => setSearch('')} style={{ ...btn.base }} title="Clear search">
-                Clear
-              </button>
-            )}
+          Total: {counts.total}
+        </button>
+
+        {[
+          { label: 'Applied', tone: 'info', count: counts.applied },
+          { label: 'Interview', tone: 'primary', count: counts.interview },
+          { label: 'Offer', tone: 'success', count: counts.offer },
+          { label: 'Rejected', tone: 'danger', count: counts.rejected },
+        ].map(({ label, tone, count }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() =>
+              setStatusFilter((curr) => (curr === label ? '' : label))
+            }
+            style={{
+              ...badge(tone),
+              ...(statusFilter === label
+                ? { boxShadow: 'inset 0 0 0 2px rgba(15,23,42,0.15)' }
+                : {}),
+              cursor: 'pointer',
+            }}
+            aria-pressed={statusFilter === label}
+            title={`Filter by ${label}`}
+          >
+            {label}: {count}
+          </button>
+        ))}
+      </div>
+
+      {/* Active filter chip */}
+      {statusFilter && (
+        <div className="mb-2 text-sm text-slate-600 flex items-center gap-2">
+          <span>Filtered by:</span>
+          <button
+            onClick={() => setStatusFilter('')}
+            className="rounded-full border border-slate-300 px-2 py-1"
+            title="Clear filter"
+          >
+            {statusFilter} ✕
+          </button>
+        </div>
+      )}
+
+      {/* Controls */}
+      <div
+        style={{ ...card, padding: 14, marginBottom: 16 }}
+        className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center"
+      >
+        <div className="flex items-center gap-2">
+          <input
+            ref={firstInputRef}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search company, role, status, industry…"
+            style={{ ...inputStyle }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              style={{ ...btn.base }}
+              title="Clear search"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 justify-self-end">
+          <label className="text-slate-500 text-sm">Sort</label>
+          <select
+            value={sortBy}
+            onChange={onSortByChange}
+            style={{ ...inputStyle, width: 160, padding: 8 }}
+          >
+            <option value="created_at">Added</option>
+            <option value="due_date">Due date</option>
+            <option value="company">Company</option>
+            <option value="role">Role</option>
+            <option value="status">Status</option>
+          </select>
+          <button
+            onClick={toggleSortDir}
+            style={{ ...btn.base }}
+            aria-label="Toggle sort direction"
+          >
+            {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
+          </button>
+          <span className="text-slate-500 text-sm ml-2">
+            {startIdx}-{endIdx} of {total}
+          </span>
+          <button
+            onClick={prevPage}
+            disabled={loading || page <= 1}
+            style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
+            aria-label="Previous page"
+          >
+            ‹ Prev
+          </button>
+          <button
+            onClick={nextPage}
+            disabled={loading || page >= maxPage}
+            style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
+            aria-label="Next page"
+          >
+            Next ›
+          </button>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            style={{ ...inputStyle, width: 110, padding: 8 }}
+          >
+            {[10, 20, 50].map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}/page
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Add form card */}
+      <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
+        <AddApplicationForm
+          onCreated={async () => {
+            try {
+              await reloadCurrentPage();
+              toast.success?.('Application created') ?? toast('Application created');
+            } catch (err) {
+              console.error(err);
+              toast.error?.('Failed to reload applications') ??
+                toast('Failed to reload applications');
+            }
+          }}
+        />
+      </div>
+
+      {/* Error banner */}
+      {errorMsg && (
+        <div
+          style={{
+            background: theme.errorBg,
+            color: theme.errorText,
+            border: `1px solid ${theme.errorBorder}`,
+            borderRadius: 10,
+            padding: 12,
+            marginBottom: 12,
+          }}
+        >
+          {errorMsg}
+        </div>
+      )}
+
+      {/* Small-screen cards */}
+      {!loading && rows.length > 0 && (
+        <div className="md:hidden space-y-3">
+          {rows.map((r, idx) => (
+            <AppCard key={(r.app_uuid ?? r.id ?? r.created_at) + ':' + idx} r={r} />
+          ))}
+        </div>
+      )}
+
+      {/* Table */}
+      {!loading && rows.length > 0 && (
+        <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
+          <div style={{ overflowX: 'auto' }}>
+            <table
+              cellPadding="12"
+              style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    position: 'sticky',
+                    top: 0,
+                    background: theme.header,
+                    zIndex: 1,
+                    borderBottom: `1px solid ${theme.border}`,
+                  }}
+                >
+                  <th style={{ textAlign: 'left' }}>Company</th>
+                  <th style={{ textAlign: 'left' }}>Role</th>
+                  <th style={{ textAlign: 'left' }}>Function</th>
+                  <th style={{ textAlign: 'left' }}>Industry</th>
+                  <th style={{ textAlign: 'left' }}>Status</th>
+                  <th style={{ textAlign: 'left' }}>Next action</th>
+                  <th style={{ textAlign: 'left' }}>Due</th>
+                  {/* Advanced columns hidden from the main list */}
+                  <th style={{ textAlign: 'left' }}>Outcome</th>
+                  <th style={{ textAlign: 'left' }}>Added</th>
+                  <th style={{ textAlign: 'left' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => {
+                  const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
+                  const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
+                  const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
+                  return (
+                    <tr
+                      key={key}
+                      style={{
+                        borderBottom: `1px solid ${theme.border}`,
+                        background: zebra,
+                        transition: 'background 120ms ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
+                    >
+                      <td>
+                        <div className="text-base font-semibold leading-tight">
+                          {fmt(r.company)}
+                        </div>
+                      </td>
+                      <td>{fmt(r.role)}</td>
+                      <td>{fmt(r.function)}</td>
+                      <td>{fmt(r.industry)}</td>
+                      <td><StatusBadge status={r.status} /></td>
+                      <td style={{ maxWidth: 280, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                        {fmt(r.next_action)}
+                      </td>
+                      <td><DuePill due={r.due_date} /></td>
+                      <td>{fmt(r.outcome)}</td>
+                      <td>{fmtDate(r.created_at)}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <button
+                            style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
+                            onClick={() => handleEdit(r)}
+                            disabled={isDeleting}
+                            aria-label="Edit application"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
+                            onClick={() => handleDelete(r)}
+                            disabled={isDeleting}
+                            aria-label="Delete application"
+                          >
+                            {isDeleting ? 'Deleting…' : 'Delete'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 justify-self-end">
-            <label className="text-slate-500 text-sm">Sort</label>
-            <select value={sortBy} onChange={onSortByChange} style={{ ...inputStyle, width: 160, padding: 8 }}>
-              <option value="created_at">Added</option>
-              <option value="due_date">Due date</option>
-              <option value="company">Company</option>
-              <option value="role">Role</option>
-              <option value="status">Status</option>
-            </select>
-            <button onClick={toggleSortDir} style={{ ...btn.base }} aria-label="Toggle sort direction">
-              {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
-            </button>
-            <span className="text-slate-500 text-sm ml-2">
-              {startIdx}-{endIdx} of {total}
+          {/* Bottom controls */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              padding: 12,
+              borderTop: `1px solid ${theme.border}`,
+            }}
+          >
+            <span className="text-slate-500 text-sm">
+              Page {page} of {maxPage} • {startIdx}-{endIdx} of {total}
             </span>
             <button
-              onClick={prevPage}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={loading || page <= 1}
               style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
-              aria-label="Previous page"
             >
               ‹ Prev
             </button>
             <button
-              onClick={nextPage}
+              onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
               disabled={loading || page >= maxPage}
               style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
-              aria-label="Next page"
             >
               Next ›
             </button>
-            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ ...inputStyle, width: 110, padding: 8 }}>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              style={{ ...inputStyle, width: 110, padding: 8 }}
+            >
               {[10, 20, 50].map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}/page
@@ -674,366 +873,199 @@ const isPastDate = (s) => {
             </select>
           </div>
         </div>
+      )}
+    </div>
 
-     {/* Add form card */}
-     <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
-       <AddApplicationForm
-      
-        onCreated={async (result) => {
-         try {
-            // Reload to show the new record
-            await reloadCurrentPage();
-           // Success feedback
-            toast.success('Application created');
-          } catch (err) {
-            console.error(err);
-            toast.error('Failed to reload applications');
-          }
+    {/* Edit Modal */}
+    {editing && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Edit application"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: theme.overlay,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: 16,
         }}
-       />
-     </div>
-
-     {/* Error banner */}
-     {errorMsg && (
-       <div
-         style={{
-           background: theme.errorBg,
-           color: theme.errorText,
-           border: `1px solid ${theme.errorBorder}`,
-           borderRadius: 10,
-           padding: 12,
-           marginBottom: 12,
-         }}
-       >
-         {errorMsg}
-       </div>
-     )}
-
-        {/* Small-screen cards */}
-        {!loading && rows.length > 0 && (
-          <div className="md:hidden space-y-3">
-            {rows.map((r, idx) => (
-              <AppCard key={(r.app_uuid ?? r.id ?? r.created_at) + ':' + idx} r={r} />
-            ))}
-          </div>
-        )}
-
-        {/* Table */}
-        {!loading && rows.length > 0 && (
-          <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
-            <div style={{ overflowX: 'auto' }}>
-              <table cellPadding="12" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}>
-                <thead>
-                  <tr
-                    style={{
-                      position: 'sticky',
-                      top: 0,
-                      background: theme.header,
-                      zIndex: 1,
-                      borderBottom: `1px solid ${theme.border}`,
-                    }}
-                  >
-                    <th style={{ textAlign: 'left' }}>Company</th>
-                    <th style={{ textAlign: 'left' }}>Role</th>
-                    <th style={{ textAlign: 'left' }}>Function</th>
-                    <th style={{ textAlign: 'left' }}>Industry</th>
-                    <th style={{ textAlign: 'left' }}>Status</th>
-                    <th style={{ textAlign: 'left' }}>Next action</th>
-                    <th style={{ textAlign: 'left' }}>Due</th>
-                    {/* Advanced columns hidden from the main list */}
-                    <th style={{ textAlign: 'left' }}>Outcome</th>
-                    <th style={{ textAlign: 'left' }}>Added</th>
-                    <th style={{ textAlign: 'left' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, idx) => {
-                    const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
-                    const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
-                    const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
-                    return (
-                      <tr
-                        key={key}
-                        style={{
-                          borderBottom: `1px solid ${theme.border}`,
-                          background: zebra,
-                          transition: 'background 120ms ease',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
-                      >
-                        <td><div className="text-base font-semibold leading-tight">{fmt(r.company)}</div></td>
-                        <td>{fmt(r.role)}</td>
-                        <td>{fmt(r.function)}</td>
-                        <td>{fmt(r.industry)}</td>
-                        <td><StatusBadge status={r.status} /></td>
-                        <td style={{ maxWidth: 280, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                          {fmt(r.next_action)}
-                        </td>
-                        <td><DuePill due={r.due_date} /></td>
-                        <td>{fmt(r.outcome)}</td>
-                        <td>{fmtDate(r.created_at)}</td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            <button
-                              style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
-                              onClick={() => handleEdit(r)}
-                              disabled={isDeleting}
-                              aria-label="Edit application"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
-                              onClick={() => handleDelete(r)}
-                              disabled={isDeleting}
-                              aria-label="Delete application"
-                            >
-                              {isDeleting ? 'Deleting…' : 'Delete'}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Bottom controls */}
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                padding: 12,
-                borderTop: `1px solid ${theme.border}`,
-              }}
-            >
-              <span className="text-slate-500 text-sm">
-                Page {page} of {maxPage} • {startIdx}-{endIdx} of {total}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={loading || page <= 1}
-                style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
-              >
-                ‹ Prev
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
-                disabled={loading || page >= maxPage}
-                style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
-              >
-                Next ›
-              </button>
-              <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ ...inputStyle, width: 110, padding: 8 }}>
-                {[10, 20, 50].map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}/page
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
-
-     {/* Edit Modal */}
-{editing && (
-  <div
-    role="dialog"
-    aria-modal="true"
-    aria-label="Edit application"
-    style={{
-      position: 'fixed',
-      inset: 0,
-      background: theme.overlay,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 50,
-      padding: 16,
-    }}
-    onClick={(e) => {
-      if (e.target === e.currentTarget) setEditing(null);
-    }}
-  >
-    <form
-      onSubmit={handleUpdate}
-      style={{
-        background: theme.card,
-        padding: 22,
-        borderRadius: 14,
-        color: theme.text,
-        width: 520,
-        maxWidth: '100%',
-        display: 'grid',
-        gap: 12,
-        border: `1px solid ${theme.border}`,
-        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 18 }}>
-          {saving ? 'Saving…' : 'Edit Application'}
-        </h3>
-        <div
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setEditing(null);
+        }}
+      >
+        <form
+          onSubmit={handleUpdate}
           style={{
-            marginLeft: 'auto',
-            color: theme.mutedText,
-            fontSize: 12,
+            background: theme.card,
+            padding: 22,
+            borderRadius: 14,
+            color: theme.text,
+            width: 520,
+            maxWidth: '100%',
+            display: 'grid',
+            gap: 12,
+            border: `1px solid ${theme.border}`,
+            boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
           }}
         >
-          {editing?.company || ''}
-        </div>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 18 }}>
+              {saving ? 'Saving…' : 'Edit Application'}
+            </h3>
+            <div
+              style={{
+                marginLeft: 'auto',
+                color: theme.mutedText,
+                fontSize: 12,
+              }}
+            >
+              {editing?.company || ''}
+            </div>
+          </div>
 
-      {/* Basic fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label>
-          <div className="mb-1 text-slate-500 text-sm">Company</div>
-          <input
-            ref={firstInputRef}
-            value={form.company}
-            onChange={(e) => setForm({ ...form, company: e.target.value })}
-            style={inputStyle}
-            disabled={saving}
-            placeholder="Company name"
-          />
-        </label>
+          {/* Basic fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label>
+              <div className="mb-1 text-slate-500 text-sm">Company</div>
+              <input
+                ref={firstInputRef}
+                value={form.company}
+                onChange={(e) => setForm({ ...form, company: e.target.value })}
+                style={inputStyle}
+                disabled={saving}
+                placeholder="Company name"
+              />
+            </label>
 
-        <label>
-          <div className="mb-1 text-slate-500 text-sm">Role</div>
-          <input
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-            style={inputStyle}
-            disabled={saving}
-            placeholder="Job title"
-          />
-        </label>
+            <label>
+              <div className="mb-1 text-slate-500 text-sm">Role</div>
+              <input
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                style={inputStyle}
+                disabled={saving}
+                placeholder="Job title"
+              />
+            </label>
 
-        <label>
-          <div className="mb-1 text-slate-500 text-sm">Status</div>
-          <select
-            value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
-            style={inputStyle}
-            disabled={saving}
+            <label>
+              <div className="mb-1 text-slate-500 text-sm">Status</div>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                style={inputStyle}
+                disabled={saving}
+              >
+                <option>Applied</option>
+                <option>Interview</option>
+                <option>Offer</option>
+                <option>Rejected</option>
+                <option>Wishlist</option>
+              </select>
+            </label>
+
+            <label>
+              <div className="mb-1 text-slate-500 text-sm">Due date</div>
+              <input
+                type="date"
+                value={form.due_date}
+                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                style={inputStyle}
+                disabled={saving}
+              />
+            </label>
+
+            <label className="sm:col-span-2">
+              <div className="mb-1 text-slate-500 text-sm">Next action</div>
+              <input
+                value={form.next_action}
+                onChange={(e) =>
+                  setForm({ ...form, next_action: e.target.value })
+                }
+                style={inputStyle}
+                disabled={saving}
+                placeholder="Email recruiter on Friday"
+              />
+            </label>
+          </div>
+
+          {/* Advanced Settings */}
+          <details className="mt-2 border-t border-slate-200 pt-3">
+            <summary className="cursor-pointer font-medium text-slate-700">
+              Advanced Settings
+            </summary>
+
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label>
+                <div className="mb-1 text-slate-500 text-sm">
+                  Priority (1 high, 3 low)
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  max={3}
+                  value={form.priority ?? ''}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      priority: e.target.valueAsNumber || 1,
+                    })
+                  }
+                  style={inputStyle}
+                  disabled={saving}
+                />
+              </label>
+
+              <label className="sm:col-span-2">
+                <div className="mb-1 text-slate-500 text-sm">Location</div>
+                <input
+                  value={form.location ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, location: e.target.value || '' })
+                  }
+                  style={inputStyle}
+                  disabled={saving}
+                />
+              </label>
+
+              {/* Notes */}
+              <label className="sm:col-span-2">
+                <div className="mb-1 text-slate-500 text-sm">Notes</div>
+                <textarea
+                  value={form.notes ?? ''}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, notes: e.target.value || '' }))
+                  }
+                  style={inputStyle}
+                  rows={3}
+                  disabled={saving}
+                />
+              </label>
+            </div>
+          </details>
+
+          {/* Action buttons */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 8,
+              marginTop: 8,
+            }}
           >
-            <option>Applied</option>
-            <option>Interview</option>
-            <option>Offer</option>
-            <option>Rejected</option>
-            <option>Wishlist</option>
-          </select>
-        </label>
-
-        <label>
-          <div className="mb-1 text-slate-500 text-sm">Due date</div>
-          <input
-            type="date"
-            value={form.due_date}
-            onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-            style={inputStyle}
-            disabled={saving}
-          />
-        </label>
-
-        <label className="sm:col-span-2">
-          <div className="mb-1 text-slate-500 text-sm">Next action</div>
-          <input
-            value={form.next_action}
-            onChange={(e) => setForm({ ...form, next_action: e.target.value })}
-            style={inputStyle}
-            disabled={saving}
-            placeholder="Email recruiter on Friday"
-          />
-        </label>
+            <button type="button" onClick={() => setEditing(null)} style={{ ...btn.base }}>
+              Cancel
+            </button>
+            <button type="submit" disabled={saving} style={{ ...btn.base, ...btn.primary }}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </form>
       </div>
-
-{/* Advanced Settings */}
-<details className="mt-2 border-t border-slate-200 pt-3">
-  <summary className="cursor-pointer font-medium text-slate-700">
-    Advanced Settings
-  </summary>
-
-  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Priority (1 high, 3 low)</div>
-      <input
-        type="number"
-        min={1}
-        max={3}
-        value={form.priority ?? ''}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            priority: e.target.valueAsNumber || 1,
-          })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Location</div>
-      <input
-        value={form.location ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, location: e.target.value || '' })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    {/* Notes */}
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Notes</div>
-      <textarea
-        value={form.notes ?? ''}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, notes: e.target.value || '' }))
-        }
-        style={inputStyle}
-        rows={3}
-        disabled={saving}
-      />
-    </label>
-  </div>
-</details>
-
-         {/* Action buttons */}
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        gap: 8,
-        marginTop: 8,
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => setEditing(null)}
-        style={{ ...btn.base }}
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        disabled={saving}
-        style={{ ...btn.base, ...btn.primary }}
-      >
-        {saving ? 'Saving…' : 'Save'}
-      </button>
-    </div>
-  </form>
-</div>
-)}
-</main>
+    )}
+  </main>
 );
 }
