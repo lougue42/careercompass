@@ -38,24 +38,23 @@ export default function Dashboard() {
   const [errorMsg, setErrorMsg] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
-  // Edit modal
-  const [editing, setEditing] = useState(null);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    company: '',
-    role: '',
-    status: '',
-    next_action: '',
-    due_date: '',
-    // Advanced
-    interest_level: '',
-    energy_level: '',
-    days_to_respond: '',
-    notes_private: '',
-    source: '',
-    location: '',
-    priority: '2',
-  });
+  company: '',
+  role: '',
+  status: '',
+  next_action: '',
+  due_date: '',
+  // Advanced
+  interest_level: '',
+  energy_level: '',
+  days_to_respond: '',
+  notes_private: '',
+  source: '',
+  location: '',
+  function: '',   // added
+  outcome: '',    // added
+  priority: '2',
+});
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -186,6 +185,9 @@ export default function Dashboard() {
       source: row.source ?? '',
       location: row.location ?? '',
       priority: String(row.priority ?? 2),
+      function: row.function ?? '',
+outcome: row.outcome ?? '',
+
     });
   }
 
@@ -744,95 +746,90 @@ return (
       )}
 
       {/* Table */}
-      {!loading && rows.length > 0 && (
-        <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              cellPadding="12"
-              style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    position: 'sticky',
-                    top: 0,
-                    background: theme.header,
-                    zIndex: 1,
-                    borderBottom: `1px solid ${theme.border}`,
-                  }}
-                >
-                  <th style={{ textAlign: 'left' }}>Company</th>
-                  <th style={{ textAlign: 'left' }}>Role</th>
-                  <th style={{ textAlign: 'left' }}>Function</th>
-                  <th style={{ textAlign: 'left' }}>Industry</th>
-                  <th style={{ textAlign: 'left' }}>Status</th>
-                  <th style={{ textAlign: 'left' }}>Next action</th>
-                  <th style={{ textAlign: 'left' }}>Due</th>
-                  {/* Advanced columns hidden from the main list */}
-                  <th style={{ textAlign: 'left' }}>Outcome</th>
-                  <th style={{ textAlign: 'left' }}>Added</th>
-                  <th style={{ textAlign: 'left' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, idx) => {
-                  const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
-                  const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
-                  const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
-                  return (
-                    <tr
-                      key={key}
-                      style={{
-                        borderBottom: `1px solid ${theme.border}`,
-                        background: zebra,
-                        transition: 'background 120ms ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
+{!loading && rows.length > 0 && (
+  <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
+    <div style={{ overflowX: 'auto' }}>
+      <table
+        cellPadding="12"
+        style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}
+      >
+        <thead>
+          <tr
+            style={{
+              position: 'sticky',
+              top: 0,
+              background: theme.header,
+              zIndex: 1,
+              borderBottom: `1px solid ${theme.border}`,
+            }}
+          >
+            <th style={{ textAlign: 'left' }}>Company</th>
+            <th style={{ textAlign: 'left' }}>Role</th>
+            <th style={{ textAlign: 'left' }}>Industry</th>
+            <th style={{ textAlign: 'left' }}>Status</th>
+            <th style={{ textAlign: 'left' }}>Next action</th>
+            <th style={{ textAlign: 'left' }}>Due</th>
+            <th style={{ textAlign: 'left' }}>Added</th>
+            <th style={{ textAlign: 'left' }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, idx) => {
+            const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
+            const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
+            const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
+            return (
+              <tr
+                key={key}
+                style={{
+                  borderBottom: `1px solid ${theme.border}`,
+                  background: zebra,
+                  transition: 'background 120ms ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
+              >
+                <td>
+                  <div className="text-base font-semibold leading-tight">
+                    {fmt(r.company)}
+                  </div>
+                </td>
+                <td>{fmt(r.role)}</td>
+                <td>{fmt(r.industry)}</td>
+                <td><StatusBadge status={r.status} /></td>
+                <td style={{ maxWidth: 280, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                  {fmt(r.next_action)}
+                </td>
+                <td><DuePill due={r.due_date} /></td>
+                <td>{fmtDate(r.created_at)}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button
+                      style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
+                      onClick={() => handleEdit(r)}
+                      disabled={isDeleting}
+                      aria-label="Edit application"
                     >
-                      <td>
-                        <div className="text-base font-semibold leading-tight">
-                          {fmt(r.company)}
-                        </div>
-                      </td>
-                      <td>{fmt(r.role)}</td>
-                      <td>{fmt(r.function)}</td>
-                      <td>{fmt(r.industry)}</td>
-                      <td><StatusBadge status={r.status} /></td>
-                      <td style={{ maxWidth: 280, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                        {fmt(r.next_action)}
-                      </td>
-                      <td><DuePill due={r.due_date} /></td>
-                      <td>{fmt(r.outcome)}</td>
-                      <td>{fmtDate(r.created_at)}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <button
-                            style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
-                            onClick={() => handleEdit(r)}
-                            disabled={isDeleting}
-                            aria-label="Edit application"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
-                            onClick={() => handleDelete(r)}
-                            disabled={isDeleting}
-                            aria-label="Delete application"
-                          >
-                            {isDeleting ? 'Deleting…' : 'Delete'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      Edit
+                    </button>
+                    <button
+                      style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
+                      onClick={() => handleDelete(r)}
+                      disabled={isDeleting}
+                      aria-label="Delete application"
+                    >
+                      {isDeleting ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
 
-          {/* Bottom controls */}
+    {/* Bottom controls */}
           <div
             style={{
               display: 'flex',
@@ -992,61 +989,90 @@ return (
             </label>
           </div>
 
-          {/* Advanced Settings */}
-          <details className="mt-2 border-t border-slate-200 pt-3">
-            <summary className="cursor-pointer font-medium text-slate-700">
-              Advanced Settings
-            </summary>
+{/* Advanced Settings */}
+<details className="mt-2 border-t border-slate-200 pt-3">
+  <summary className="cursor-pointer font-medium text-slate-700">
+    Advanced Settings
+  </summary>
 
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label>
-                <div className="mb-1 text-slate-500 text-sm">
-                  Priority (1 high, 3 low)
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  max={3}
-                  value={form.priority ?? ''}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      priority: e.target.valueAsNumber || 1,
-                    })
-                  }
-                  style={inputStyle}
-                  disabled={saving}
-                />
-              </label>
+  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <label>
+      <div className="mb-1 text-slate-500 text-sm">
+        Priority (1 high, 3 low)
+      </div>
+      <input
+        type="number"
+        min={1}
+        max={3}
+        value={form.priority ?? ''}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            priority: e.target.valueAsNumber || 1,
+          })
+        }
+        style={inputStyle}
+        disabled={saving}
+      />
+    </label>
 
-              <label className="sm:col-span-2">
-                <div className="mb-1 text-slate-500 text-sm">Location</div>
-                <input
-                  value={form.location ?? ''}
-                  onChange={(e) =>
-                    setForm({ ...form, location: e.target.value || '' })
-                  }
-                  style={inputStyle}
-                  disabled={saving}
-                />
-              </label>
+    {/* New: Function */}
+    <label>
+      <div className="mb-1 text-slate-500 text-sm">Function</div>
+      <input
+        type="text"
+        value={form.function || ''}
+        onChange={(e) => setForm({ ...form, function: e.target.value })}
+        style={inputStyle}
+        disabled={saving}
+        placeholder="e.g., Business Development"
+      />
+    </label>
 
-              {/* Notes */}
-              <label className="sm:col-span-2">
-                <div className="mb-1 text-slate-500 text-sm">Notes</div>
-                <textarea
-                  value={form.notes ?? ''}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, notes: e.target.value || '' }))
-                  }
-                  style={inputStyle}
-                  rows={3}
-                  disabled={saving}
-                />
-              </label>
-            </div>
-          </details>
+    {/* New: Outcome */}
+    <label>
+      <div className="mb-1 text-slate-500 text-sm">Outcome</div>
+      <select
+        value={form.outcome || ''}
+        onChange={(e) => setForm({ ...form, outcome: e.target.value })}
+        style={inputStyle}
+        disabled={saving}
+      >
+        <option value="">—</option>
+        <option value="Interview">Interview</option>
+        <option value="Offer">Offer</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Wishlist">Wishlist</option>
+      </select>
+    </label>
 
+    <label className="sm:col-span-2">
+      <div className="mb-1 text-slate-500 text-sm">Location</div>
+      <input
+        value={form.location ?? ''}
+        onChange={(e) =>
+          setForm({ ...form, location: e.target.value || '' })
+        }
+        style={inputStyle}
+        disabled={saving}
+      />
+    </label>
+
+    {/* Notes */}
+    <label className="sm:col-span-2">
+      <div className="mb-1 text-slate-500 text-sm">Notes</div>
+      <textarea
+        value={form.notes ?? ''}
+        onChange={(e) =>
+          setForm((f) => ({ ...f, notes: e.target.value || '' }))
+        }
+        style={inputStyle}
+        rows={3}
+        disabled={saving}
+      />
+    </label>
+  </div>
+</details>
           {/* Action buttons */}
           <div
             style={{
