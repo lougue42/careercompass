@@ -268,44 +268,155 @@ async function handleUpdate(e) {
   }
 }
 
-  // helpers / UI parts
-  const fmt = (v) => (v === null || v === undefined || v === '' ? '—' : String(v));
-  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
+// helpers / UI parts
 
-  const daysUntil = (dateStr) => {
-    if (!dateStr) return null;
-    const today = new Date();
-    const date = new Date(dateStr);
-    const msPerDay = 24 * 60 * 60 * 1000;
-    return Math.floor((date.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0)) / msPerDay);
+// Display "—" for empty values
+const fmt = (v) => (v === null || v === undefined || v === '' ? '—' : String(v));
+
+/**
+ * Formats stored due_date strings ("YYYY-MM-DD" or ISO) as "Oct 20, 2025"
+ * Uses local midnight to avoid timezone drift.
+ */
+const fmtDate = (s) => {
+  if (!s) return '—';
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(s)
+    ? new Date(`${s}T00:00:00`)
+    : new Date(s);
+  if (Number.isNaN(d.getTime())) return '—';
+  d.setHours(0, 0, 0, 0);
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+/**
+ * Returns days between today (local midnight) and the given date string.
+ * Negative = past, 0 = today, positive = days ahead.
+ */
+const daysUntil = (s) => {
+  if (!s) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(s)
+    ? new Date(`${s}T00:00:00`)
+    : new Date(s);
+  if (Number.isNaN(d.getTime())) return null;
+
+  d.setHours(0, 0, 0, 0);
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((d - today) / msPerDay);
+};
+
+/**
+ * Renders a colored pill showing date proximity.
+ * "No due date", "Overdue", "Due today", "Due in Xd", or "Scheduled".
+ */
+const DuePill = ({ due }) => {
+  if (!due) return <span style={pill('neutral')}>No due date</span>;
+
+  const delta = daysUntil(due);
+  if (delta === null) return <span style={pill('neutral')}>No due date</span>;
+  if (delta < 0)
+    return (
+      <span style={pill('danger')}>Overdue ({fmtDate(due)})</span>
+    );
+  if (delta === 0)
+    return <span style={pill('warning')}>Due today</span>;
+  if (delta <= 7)
+    return <span style={pill('warning')}>Due in {delta}d</span>;
+
+  return (
+    <span style={pill('info')}>Scheduled ({fmtDate(due)})</span>
+  );
+};
+
+/**
+ * Maps application status to a colored badge.
+ */
+const StatusBadge = ({ status }) => {
+  const s = String(status || '').toLowerCase();
+  const map = {
+    applied: 'info',
+    interview: 'primary',
+    offer: 'success',
+    rejected: 'danger',
+    wishlist: 'neutral',
   };
+  const tone = map[s] || 'neutral';
+  return <span style={badge(tone)}>{fmt(status)}</span>;
+};
 
-  const DuePill = ({ due }) => {
-    if (!due) return <span style={pill('neutral')}>No due date</span>;
-    const delta = daysUntil(due);
-    if (delta === null) return <span style={pill('neutral')}>No due date</span>;
-    if (delta < 0) return <span style={pill('danger')}>Overdue ({fmtDate(due)})</span>;
-    if (delta === 0) return <span style={pill('warning')}>Due today</span>;
-    if (delta <= 7) return <span style={pill('warning')}>Due in {delta}d</span>;
-    return <span style={pill('info')}>Scheduled ({fmtDate(due)})</span>;
+/**
+ * Tally of counts for each status.
+ */
+const counts = useMemo(() => {
+  const tally = {
+    total,
+    applied: 0,
+    interview: 0,
+    offer: 0,
+    rejected: 0,
   };
+  rows.forEach((r) => {
+    const s = String(r.status || '').toLowerCase();
+    if (tally[s] !== undefined) tally[s]++;
+  });
+  return tally;
+}, [rows, total]);
 
-  const StatusBadge = ({ status }) => {
-    const s = String(status || '').toLowerCase();
-    const map = { applied: 'info', interview: 'primary', offer: 'success', rejected: 'danger', wishlist: 'neutral' };
-    const tone = map[s] || 'neutral';
-    return <span style={badge(tone)}>{fmt(status)}</span>;
-  };
+/**
+ * --- Date utility helpers for chips & validation ---
+ */
+const toISODateLocal = (d) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
 
-  const counts = useMemo(() => {
-    const tally = { total: total, applied: 0, interview: 0, offer: 0, rejected: 0 };
-    rows.forEach((r) => {
-      const s = String(r.status || '').toLowerCase();
-      if (tally[s] !== undefined) tally[s]++;
-    });
-    return tally;
-  }, [rows, total]);
+const todayLocal = () => {
+  const t = new Date();
+  t.setHours(0, 0, 0, 0);
+  return toISODateLocal(t);
+};
 
+const quickPick = (label) => {
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  if (label === 'Today') return toISODateLocal(base);
+  if (label === '+3d') {
+    const d = new Date(base);
+    d.setDate(d.getDate() + 3);
+    return toISODateLocal(d);
+  }
+  if (label === 'Next Mon') {
+    const d = new Date(base);
+    const day = d.getDay(); // 0 Sun, 1 Mon
+    const delta = ((1 - day + 7) % 7) || 7;
+    d.setDate(d.getDate() + delta);
+    return toISODateLocal(d);
+  }
+  return '';
+};
+
+const isValidDateOnly = (s) => {
+  if (!s) return true;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return false;
+  const d = new Date(`${s}T00:00:00`);
+  return !Number.isNaN(d.getTime());
+};
+
+const isPastDate = (s) => {
+  if (!s) return false;
+  const selected = new Date(`${s}T00:00:00`);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return selected < now;
+};
   // styles
   const btn = {
     base: {
