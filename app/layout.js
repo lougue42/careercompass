@@ -30,10 +30,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen overflow-x-hidden text-slate-900`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen w-screen bg-[#f7f8fb] overflow-x-hidden text-slate-900`}
       >
         <ToastProvider>
-          <div className="mx-auto max-w-6xl px-4 py-6">{children}</div>
+          {/* Full width, just padded edges */}
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6">{children}</div>
         </ToastProvider>
       </body>
     </html>

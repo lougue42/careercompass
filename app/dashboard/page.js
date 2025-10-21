@@ -551,7 +551,7 @@ return (
       color: theme.text,
     }}
   >
-    <div className="max-w-6xl mx-auto w-full px-2 sm:px-4 md:px-6">
+   <div className="w-full px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-5">
         <div>
