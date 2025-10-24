@@ -632,53 +632,56 @@ return (
         </div>
       )}
 
-{/* Controls */}
+{/* Controls (Search + Add Application + Timestamp) */}
 <div
   style={{ ...card, padding: 14, marginBottom: 16 }}
-  className="grid grid-cols-1 gap-3 items-center"
+  className="grid grid-cols-1 gap-2"
 >
-  <div className="flex items-center gap-2">
-    <input
-      ref={firstInputRef}
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      placeholder="Search company, role, status, industry…"
-      style={{ ...inputStyle }}
-    />
-    {search && (
-      <button
-        onClick={() => setSearch('')}
-        style={{ ...btn.base }}
-        title="Clear search"
-      >
-        Clear
-      </button>
-    )}
+  {/* Search + Add side-by-side */}
+  <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center gap-2 flex-1">
+      <input
+        ref={firstInputRef}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search company, role, status, industry…"
+        style={{ ...inputStyle, width: '100%' }}
+      />
+      {search && (
+        <button
+          onClick={() => setSearch('')}
+          style={{ ...btn.base }}
+          title="Clear search"
+        >
+          Clear
+        </button>
+      )}
+    </div>
+
+    {/* Add Application button now anchored on the right */}
+    <div className="shrink-0">
+      <AddApplicationForm
+        onCreated={async () => {
+          try {
+            await reloadCurrentPage();
+            setLastUpdated(new Date()); // ✅ dynamically refresh timestamp
+            toast.success?.('Application created') ?? toast('Application created');
+          } catch (err) {
+            console.error(err);
+            toast.error?.('Failed to reload applications') ??
+              toast('Failed to reload applications');
+          }
+        }}
+      />
+    </div>
   </div>
 
   {/* Last updated timestamp */}
   <p className="text-xs text-slate-500 mt-1">
-    Last updated {new Date().toLocaleDateString()} at{' '}
-    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    Last updated {lastUpdated.toLocaleDateString()} at{' '}
+    {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
   </p>
 </div>
-{/* Add form card */}
-<div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
-  <AddApplicationForm
-    onCreated={async () => {
-      try {
-        await reloadCurrentPage();
-        setLastUpdated(new Date()); // ✅ update dynamic timestamp
-        toast.success?.('Application created') ?? toast('Application created');
-      } catch (err) {
-        console.error(err);
-        toast.error?.('Failed to reload applications') ??
-          toast('Failed to reload applications');
-      }
-    }}
-  />
-</div>
-
       {/* Error banner */}
       {errorMsg && (
         <div

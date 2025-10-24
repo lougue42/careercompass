@@ -3,7 +3,6 @@
 import { useState, FormEvent } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-
 type Props = {
   onCreated?: () => void; // callback to refresh the table
 };
@@ -20,6 +19,16 @@ export default function AddApplicationForm({ onCreated }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // shared light styles to match dashboard
+  const fieldStyle: React.CSSProperties = {
+    padding: 8,
+    borderRadius: 8,
+    background: '#ffffff',
+    color: '#0f172a',
+    border: '1px solid #d1d5db',
+    outline: 'none',
+  };
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -58,86 +67,75 @@ export default function AddApplicationForm({ onCreated }: Props) {
     setNextAction('');
     setOpen(false);
 
-    onCreated?.(); // trigger refresh
+    onCreated?.(); // trigger refresh in parent
   }
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      {/* toggle button */}
+    <div style={{ marginBottom: 0 }}>
+      {/* compact toggle so it sits nicely in the controls bar */}
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         style={{
           padding: '8px 12px',
-          borderRadius: 6,
-          background: '#1f1f1f',
-          color: 'white',
-          border: '1px solid #333',
+          borderRadius: 8,
+          background: '#0f172a',
+          color: '#ffffff',
+          border: '1px solid #0f172a',
           cursor: 'pointer',
+          boxShadow: '0 2px 6px rgba(15,23,42,0.12)',
         }}
       >
         {open ? 'Close' : 'Add application'}
       </button>
 
-      {/* form */}
+      {/* inline form (light theme) */}
       {open && (
         <form
           onSubmit={handleSubmit}
           style={{
-            marginTop: 16,
+            marginTop: 12,
             display: 'grid',
             gap: 12,
-            maxWidth: 480,
-            background: '#111',
+            maxWidth: 520,
+            background: '#ffffff',
+            color: '#0f172a',
             padding: 16,
-            borderRadius: 8,
+            borderRadius: 12,
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 6px 16px rgba(15,23,42,0.06)',
           }}
         >
           {errorMsg && (
-            <div style={{ color: '#f87171', fontSize: 14 }}>{errorMsg}</div>
+            <div style={{ color: '#b91c1c', fontSize: 14 }}>{errorMsg}</div>
           )}
 
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 13, opacity: 0.8 }}>Company *</span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>Company *</span>
             <input
-              style={{
-                padding: '8px',
-                borderRadius: 6,
-                background: '#1f1f1f',
-                color: 'white',
-                border: '1px solid #333',
-              }}
+              style={fieldStyle}
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="e.g., Google"
+              autoComplete="off"
             />
           </label>
 
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 13, opacity: 0.8 }}>Role *</span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>Role *</span>
             <input
-              style={{
-                padding: '8px',
-                borderRadius: 6,
-                background: '#1f1f1f',
-                color: 'white',
-                border: '1px solid #333',
-              }}
+              style={fieldStyle}
               value={role}
               onChange={(e) => setRole(e.target.value)}
               placeholder="e.g., Business Analyst Intern"
+              autoComplete="off"
             />
           </label>
 
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 13, opacity: 0.8 }}>Status</span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>Status</span>
             <select
-              style={{
-                padding: '8px',
-                borderRadius: 6,
-                background: '#1f1f1f',
-                color: 'white',
-                border: '1px solid #333',
-              }}
+              style={fieldStyle}
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
             >
@@ -150,15 +148,9 @@ export default function AddApplicationForm({ onCreated }: Props) {
           </label>
 
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 13, opacity: 0.8 }}>Next action</span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>Next action</span>
             <input
-              style={{
-                padding: '8px',
-                borderRadius: 6,
-                background: '#1f1f1f',
-                color: 'white',
-                border: '1px solid #333',
-              }}
+              style={fieldStyle}
               value={nextAction}
               onChange={(e) => setNextAction(e.target.value)}
               placeholder="e.g., Follow up with recruiter"
@@ -166,16 +158,10 @@ export default function AddApplicationForm({ onCreated }: Props) {
           </label>
 
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 13, opacity: 0.8 }}>Due date</span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>Due date</span>
             <input
               type="date"
-              style={{
-                padding: '8px',
-                borderRadius: 6,
-                background: '#1f1f1f',
-                color: 'white',
-                border: '1px solid #333',
-              }}
+              style={fieldStyle}
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
@@ -185,14 +171,14 @@ export default function AddApplicationForm({ onCreated }: Props) {
             type="submit"
             disabled={saving}
             style={{
-              marginTop: 8,
+              marginTop: 4,
               padding: '8px 12px',
-              borderRadius: 6,
-              background: saving ? '#555' : '#16a34a',
-              color: 'white',
+              borderRadius: 8,
+              background: saving ? '#94a3b8' : '#16a34a',
+              color: '#ffffff',
               border: 'none',
-              cursor: 'pointer',
-              opacity: saving ? 0.7 : 1,
+              cursor: saving ? 'default' : 'pointer',
+              opacity: saving ? 0.8 : 1,
             }}
           >
             {saving ? 'Saving…' : 'Save'}
