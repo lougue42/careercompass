@@ -424,63 +424,77 @@ const isPastDate = (s) => {
   now.setHours(0, 0, 0, 0);
   return selected < now;
 };
-  // styles
-  const btn = {
-    base: {
-      padding: '8px 12px',
-      border: `1px solid ${theme.border}`,
-      borderRadius: 10,
-      background: theme.card,
-      color: theme.text,
-      cursor: 'pointer',
-      boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
-    },
-    primary: { background: theme.primary, border: `1px solid ${theme.primary}`, color: theme.primaryText },
-    danger: { background: theme.danger, border: `1px solid ${theme.danger}`, color: theme.primaryText },
-    disabled: { opacity: 0.6, cursor: 'not-allowed' },
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: 12,
-    borderRadius: 10,
-    background: theme.inputBg,
-    border: `1px solid ${theme.inputBorder}`,
-    color: theme.text,
-    outline: 'none',
-    boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
-  };
-
-  const card = {
-    background: theme.card,
+ // styles
+const btn = {
+  base: {
+    fontSize: 13,
+    padding: '6px 10px',
     border: `1px solid ${theme.border}`,
-    borderRadius: 14,
-    boxShadow: theme.shadow,
+    borderRadius: 8,
+    background: theme.card,
+    color: theme.text,
+    cursor: 'pointer',
+    boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
+    transition: 'background 120ms ease, border-color 120ms ease',
+  },
+  // Softer blue "Edit"
+  primary: {
+    background: '#dbeafe',           // soft blue
+    border: '1px solid #bfdbfe',
+    color: '#1d4ed8',
+  },
+  // Softer red "Delete"
+  danger: {
+    background: '#fee2e2',           // soft red
+    border: '1px solid #fecaca',
+    color: '#991b1b',
+  },
+  disabled: { opacity: 0.6, cursor: 'not-allowed' },
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: 12,
+  borderRadius: 10,
+  background: theme.inputBg,
+  border: `1px solid ${theme.inputBorder}`,
+  color: theme.text,
+  outline: 'none',
+  boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
+};
+
+const card = {
+  background: theme.card,
+  border: `1px solid ${theme.border}`,
+  borderRadius: 14,
+  boxShadow: theme.shadow,
+};
+
+function badge(tone) {
+  const tones = {
+    primary: { bg: '#dbeafe', text: '#1d4ed8', border: '#bfdbfe' },
+    success: { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
+    danger: { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
+    warning: { bg: '#fef3c7', text: '#92400e', border: '#fde68a' },
+    info: { bg: '#e0f2fe', text: '#075985', border: '#bae6fd' },
+    neutral: { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' },
   };
+  const c = tones[tone] || tones.neutral;
+  return {
+    display: 'inline-block',
+    padding: '4px 8px',
+    borderRadius: 999,
+    background: c.bg,
+    color: c.text,
+    border: `1px solid ${c.border}`,
+    fontSize: 12,
+    fontWeight: 600,
+  };
+}
 
-  function badge(tone) {
-    const tones = {
-      primary: { bg: '#dbeafe', text: '#1d4ed8', border: '#bfdbfe' },
-      success: { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' },
-      danger: { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
-      warning: { bg: '#fef3c7', text: '#92400e', border: '#fde68a' },
-      info: { bg: '#e0f2fe', text: '#075985', border: '#bae6fd' },
-      neutral: { bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' },
-    };
-    const c = tones[tone] || tones.neutral;
-    return {
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: 999,
-      background: c.bg,
-      color: c.text,
-      border: `1px solid ${c.border}`,
-      fontSize: 12,
-      fontWeight: 600,
-    };
-  }
-  function pill(tone) { return { ...badge(tone), fontWeight: 500 }; }
-
+function pill(tone) {
+  return { ...badge(tone), fontWeight: 500 };
+}
   // paging helpers
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -892,7 +906,7 @@ return (
         display: 'grid',
         gap: 12,
         border: `1px solid ${theme.border}`,
-        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
+        boxShadow: '0 12px 32px rgba(70, 98, 164, 0.18)',
         maxHeight: '90vh',
         overflowY: 'auto'
       }}
