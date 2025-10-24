@@ -427,9 +427,9 @@ const isPastDate = (s) => {
 // styles
 const btn = {
   base: {
-    fontSize: 13,
-    padding: '4px 9px',              // slightly shorter height
-    borderRadius: 8,
+    fontSize: 12,                    // 80% text size
+    padding: '3px 7px',              // 80% of previous padding
+    borderRadius: 6,                 // proportional rounding
     border: `1px solid ${theme.border}`,
     background: theme.card,
     color: theme.text,
@@ -439,13 +439,13 @@ const btn = {
   },
   // Richer blue "Edit"
   primary: {
-    background: '#bfdbfe',           // medium blue (less pastel)
+    background: '#bfdbfe',           // medium blue
     border: '1px solid #93c5fd',
     color: '#1e3a8a',
   },
   // Richer red "Delete"
   danger: {
-    background: '#fecaca',           // medium red (less pastel)
+    background: '#fecaca',           // medium red
     border: '1px solid #fca5a5',
     color: '#7f1d1d',
   },
@@ -457,8 +457,8 @@ const btn = {
 
 const inputStyle = {
   width: '100%',
-  padding: 12,
-  borderRadius: 10,
+  padding: 10,                       // slightly reduced
+  borderRadius: 8,
   background: theme.inputBg,
   border: `1px solid ${theme.inputBorder}`,
   color: theme.text,
@@ -469,10 +469,11 @@ const inputStyle = {
 const card = {
   background: theme.card,
   border: `1px solid ${theme.border}`,
-  borderRadius: 14,
+  borderRadius: 12,
   boxShadow: theme.shadow,
 };
 
+// badges and pills now 80% height/width/size
 function badge(tone) {
   const tones = {
     primary: { bg: '#dbeafe', text: '#1d4ed8', border: '#bfdbfe' },
@@ -485,12 +486,12 @@ function badge(tone) {
   const c = tones[tone] || tones.neutral;
   return {
     display: 'inline-block',
-    padding: '4px 8px',
-    borderRadius: 999,
+    padding: '3px 6px',              // 80% padding
+    borderRadius: 6,                 // proportional rounding
     background: c.bg,
     color: c.text,
     border: `1px solid ${c.border}`,
-    fontSize: 12,
+    fontSize: 10,                    // slightly smaller text
     fontWeight: 600,
   };
 }
@@ -498,7 +499,6 @@ function badge(tone) {
 function pill(tone) {
   return { ...badge(tone), fontWeight: 500 };
 }
-
   // paging helpers
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
