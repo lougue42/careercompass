@@ -424,32 +424,35 @@ const isPastDate = (s) => {
   now.setHours(0, 0, 0, 0);
   return selected < now;
 };
- // styles
+// styles
 const btn = {
   base: {
     fontSize: 13,
-    padding: '6px 10px',
-    border: `1px solid ${theme.border}`,
+    padding: '4px 9px',              // slightly shorter height
     borderRadius: 8,
+    border: `1px solid ${theme.border}`,
     background: theme.card,
     color: theme.text,
     cursor: 'pointer',
-    boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
-    transition: 'background 120ms ease, border-color 120ms ease',
+    boxShadow: '0 1px 0 rgba(0,0,0,0.03)',
+    transition: 'background 150ms ease, border-color 150ms ease, transform 100ms ease',
   },
-  // Softer blue "Edit"
+  // Richer blue "Edit"
   primary: {
-    background: '#dbeafe',           // soft blue
-    border: '1px solid #bfdbfe',
-    color: '#1d4ed8',
+    background: '#bfdbfe',           // medium blue (less pastel)
+    border: '1px solid #93c5fd',
+    color: '#1e3a8a',
   },
-  // Softer red "Delete"
+  // Richer red "Delete"
   danger: {
-    background: '#fee2e2',           // soft red
-    border: '1px solid #fecaca',
-    color: '#991b1b',
+    background: '#fecaca',           // medium red (less pastel)
+    border: '1px solid #fca5a5',
+    color: '#7f1d1d',
   },
-  disabled: { opacity: 0.6, cursor: 'not-allowed' },
+  disabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed',
+  },
 };
 
 const inputStyle = {
@@ -495,6 +498,7 @@ function badge(tone) {
 function pill(tone) {
   return { ...badge(tone), fontWeight: 500 };
 }
+
   // paging helpers
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -804,7 +808,8 @@ return (
                 <td><DuePill due={r.due_date} /></td>
                 <td>{fmtDate(r.created_at)}</td>
                 <td>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+ <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2, marginBottom: 2 }}>
+
                     <button
                       style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
                       onClick={() => handleEdit(r)}
