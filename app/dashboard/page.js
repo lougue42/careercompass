@@ -427,9 +427,9 @@ const isPastDate = (s) => {
 // styles
 const btn = {
   base: {
-    fontSize: 12,                    // 80% text size
-    padding: '3px 7px',              // 80% of previous padding
-    borderRadius: 6,                 // proportional rounding
+    fontSize: 13,
+    padding: '4px 8px',              // slightly shorter height than original
+    borderRadius: 7,                 // proportional rounding
     border: `1px solid ${theme.border}`,
     background: theme.card,
     color: theme.text,
@@ -457,8 +457,8 @@ const btn = {
 
 const inputStyle = {
   width: '100%',
-  padding: 10,                       // slightly reduced
-  borderRadius: 8,
+  padding: 11,                       // 90% of original input padding
+  borderRadius: 9,
   background: theme.inputBg,
   border: `1px solid ${theme.inputBorder}`,
   color: theme.text,
@@ -469,11 +469,10 @@ const inputStyle = {
 const card = {
   background: theme.card,
   border: `1px solid ${theme.border}`,
-  borderRadius: 12,
+  borderRadius: 13,
   boxShadow: theme.shadow,
 };
 
-// badges and pills now 80% height/width/size
 function badge(tone) {
   const tones = {
     primary: { bg: '#dbeafe', text: '#1d4ed8', border: '#bfdbfe' },
@@ -486,12 +485,12 @@ function badge(tone) {
   const c = tones[tone] || tones.neutral;
   return {
     display: 'inline-block',
-    padding: '3px 6px',              // 80% padding
-    borderRadius: 6,                 // proportional rounding
+    padding: '4px 7px',              // 90% of previous
+    borderRadius: 7,
     background: c.bg,
     color: c.text,
     border: `1px solid ${c.border}`,
-    fontSize: 10,                    // slightly smaller text
+    fontSize: 12,
     fontWeight: 600,
   };
 }
@@ -499,6 +498,7 @@ function badge(tone) {
 function pill(tone) {
   return { ...badge(tone), fontWeight: 500 };
 }
+
   // paging helpers
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -730,8 +730,8 @@ return (
   <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
     <div style={{ overflowX: 'auto' }}>
       <table
-        cellPadding="22"
-        style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, lineHeight: 2 }}
+        cellPadding="20"
+        style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, lineHeight: 1.85 }}
       >
        <thead>
   <tr
@@ -808,7 +808,7 @@ return (
                 <td><DuePill due={r.due_date} /></td>
                 <td>{fmtDate(r.created_at)}</td>
                 <td>
- <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2, marginBottom: 2 }}>
+ <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
 
                     <button
                       style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
