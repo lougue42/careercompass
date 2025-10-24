@@ -80,7 +80,8 @@ export default function Dashboard() {
 
   // Filter
   const [statusFilter, setStatusFilter] = useState('');
-
+ // Update Tracker 
+ const [lastUpdated, setLastUpdated] = useState(new Date());
   // Refs
   const addFormRef = useRef(null);
   const firstInputRef = useRef(null);
@@ -153,26 +154,26 @@ export default function Dashboard() {
     await loadApps();
   }
 
-  // Delete (still via RPC you already have)
-  async function handleDelete(row) {
-    if (!row) return alert('Missing row.');
-    if (!row.app_uuid) return alert('This row has no app_uuid; refresh and try again.');
-    if (!confirm('Delete this application?')) return;
+// Delete (still via RPC you already have)
+async function handleDelete(row) {
+  if (!row) return alert('Missing row.');
+  if (!row.app_uuid) return alert('This row has no app_uuid; refresh and try again.');
+  if (!confirm('Delete this application?')) return;
 
-    setDeletingId(row.app_uuid);
-    try {
-      const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: row.app_uuid });
-      if (error) throw error;
-      await reloadCurrentPage();
-      toast('Application deleted');
-    } catch (err) {
-      console.error('Delete error (rpc):', err);
-      alert('Error deleting: ' + (err.message || String(err)));
-    } finally {
-      setDeletingId(null);
-    }
+  setDeletingId(row.app_uuid);
+  try {
+    const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: row.app_uuid });
+    if (error) throw error;
+    await reloadCurrentPage();
+    setLastUpdated(new Date()); // ✅ refresh dynamic timestamp
+    toast('Application deleted');
+  } catch (err) {
+    console.error('Delete error (rpc):', err);
+    alert('Error deleting: ' + (err.message || String(err)));
+  } finally {
+    setDeletingId(null);
   }
-
+}
   // Edit flow
   function handleEdit(row) {
     setEditing(row);
@@ -261,19 +262,19 @@ async function handleUpdate(e) {
     }
 
     // Success
-    setEditing(null);
-    await reloadCurrentPage();
-    toast('Application updated');
-  } catch (err) {
-    const msg = err?.message || err?.cause?.message || 'Could not update application.';
-    console.error('Update error (catch):', err);
-    setErrorMsg(msg);
-    toast(msg);
-  } finally {
-    setSaving(false);
-  }
+setEditing(null);
+await reloadCurrentPage();
+setLastUpdated(new Date()); // ✅ refresh timestamp dynamically on edit
+toast('Application updated');
+} catch (err) {
+  const msg = err?.message || err?.cause?.message || 'Could not update application.';
+  console.error('Update error (catch):', err);
+  setErrorMsg(msg);
+  toast(msg);
+} finally {
+  setSaving(false);
 }
-
+}
 // helpers / UI parts
 
 // Display "—" for empty values
@@ -654,14 +655,20 @@ return (
       </button>
     )}
   </div>
-</div>
 
+  {/* Last updated timestamp */}
+  <p className="text-xs text-slate-500 mt-1">
+    Last updated {new Date().toLocaleDateString()} at{' '}
+    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+  </p>
+</div>
 {/* Add form card */}
 <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
   <AddApplicationForm
     onCreated={async () => {
       try {
         await reloadCurrentPage();
+        setLastUpdated(new Date()); // ✅ update dynamic timestamp
         toast.success?.('Application created') ?? toast('Application created');
       } catch (err) {
         console.error(err);
@@ -671,6 +678,7 @@ return (
     }}
   />
 </div>
+
       {/* Error banner */}
       {errorMsg && (
         <div
@@ -704,26 +712,51 @@ return (
         cellPadding="12"
         style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, lineHeight: 1.3 }}
       >
-        <thead>
-          <tr
-            style={{
-              position: 'sticky',
-              top: 0,
-              background: theme.header,
-              zIndex: 1,
-              borderBottom: `1px solid ${theme.border}`,
-            }}
-          >
-            <th style={{ textAlign: 'left' }}>Company</th>
-            <th style={{ textAlign: 'left' }}>Role</th>
-            <th style={{ textAlign: 'left' }}>Industry</th>
-            <th style={{ textAlign: 'left' }}>Status</th>
-            <th style={{ textAlign: 'left' }}>Next action</th>
-            <th style={{ textAlign: 'left' }}>Due</th>
-            <th style={{ textAlign: 'left' }}>Added</th>
-            <th style={{ textAlign: 'left' }}>Actions</th>
-          </tr>
-        </thead>
+       <thead>
+  <tr
+    style={{
+      position: 'sticky',
+      top: 0,
+      background: theme.header,
+      zIndex: 1,
+      borderBottom: `1px solid ${theme.border}`,
+    }}
+  >
+    <th
+      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => handleSort('company')}
+    >
+      Company {sortBy === 'company' && (sortDir === 'asc' ? '↑' : '↓')}
+    </th>
+    <th
+      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => handleSort('role')}
+    >
+      Role {sortBy === 'role' && (sortDir === 'asc' ? '↑' : '↓')}
+    </th>
+    <th style={{ textAlign: 'left' }}>Industry</th>
+    <th
+      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => handleSort('status')}
+    >
+      Status {sortBy === 'status' && (sortDir === 'asc' ? '↑' : '↓')}
+    </th>
+    <th style={{ textAlign: 'left' }}>Next action</th>
+    <th
+      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => handleSort('due_date')}
+    >
+      Due {sortBy === 'due_date' && (sortDir === 'asc' ? '↑' : '↓')}
+    </th>
+    <th
+      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => handleSort('created_at')}
+    >
+      Added {sortBy === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
+    </th>
+    <th style={{ textAlign: 'left' }}>Actions</th>
+  </tr>
+</thead>
         <tbody>
           {rows.map((r, idx) => {
             const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
