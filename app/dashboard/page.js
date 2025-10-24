@@ -631,99 +631,46 @@ return (
         </div>
       )}
 
-      {/* Controls */}
-      <div
-        style={{ ...card, padding: 14, marginBottom: 16 }}
-        className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center"
+{/* Controls */}
+<div
+  style={{ ...card, padding: 14, marginBottom: 16 }}
+  className="grid grid-cols-1 gap-3 items-center"
+>
+  <div className="flex items-center gap-2">
+    <input
+      ref={firstInputRef}
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      placeholder="Search company, role, status, industry…"
+      style={{ ...inputStyle }}
+    />
+    {search && (
+      <button
+        onClick={() => setSearch('')}
+        style={{ ...btn.base }}
+        title="Clear search"
       >
-        <div className="flex items-center gap-2">
-          <input
-            ref={firstInputRef}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company, role, status, industry…"
-            style={{ ...inputStyle }}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              style={{ ...btn.base }}
-              title="Clear search"
-            >
-              Clear
-            </button>
-          )}
-        </div>
+        Clear
+      </button>
+    )}
+  </div>
+</div>
 
-        <div className="flex flex-wrap items-center gap-2 justify-self-end">
-          <label className="text-slate-500 text-sm">Sort</label>
-          <select
-            value={sortBy}
-            onChange={onSortByChange}
-            style={{ ...inputStyle, width: 160, padding: 8 }}
-          >
-            <option value="created_at">Added</option>
-            <option value="due_date">Due date</option>
-            <option value="company">Company</option>
-            <option value="role">Role</option>
-            <option value="status">Status</option>
-          </select>
-          <button
-            onClick={toggleSortDir}
-            style={{ ...btn.base }}
-            aria-label="Toggle sort direction"
-          >
-            {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
-          </button>
-          <span className="text-slate-500 text-sm ml-2">
-            {startIdx}-{endIdx} of {total}
-          </span>
-          <button
-            onClick={prevPage}
-            disabled={loading || page <= 1}
-            style={{ ...btn.base, ...(loading || page <= 1 ? btn.disabled : {}) }}
-            aria-label="Previous page"
-          >
-            ‹ Prev
-          </button>
-          <button
-            onClick={nextPage}
-            disabled={loading || page >= maxPage}
-            style={{ ...btn.base, ...(loading || page >= maxPage ? btn.disabled : {}) }}
-            aria-label="Next page"
-          >
-            Next ›
-          </button>
-          <select
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-            style={{ ...inputStyle, width: 110, padding: 8 }}
-          >
-            {[10, 20, 50].map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}/page
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Add form card */}
-      <div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
-        <AddApplicationForm
-          onCreated={async () => {
-            try {
-              await reloadCurrentPage();
-              toast.success?.('Application created') ?? toast('Application created');
-            } catch (err) {
-              console.error(err);
-              toast.error?.('Failed to reload applications') ??
-                toast('Failed to reload applications');
-            }
-          }}
-        />
-      </div>
-
+{/* Add form card */}
+<div ref={addFormRef} style={{ ...card, padding: 16, marginBottom: 16 }}>
+  <AddApplicationForm
+    onCreated={async () => {
+      try {
+        await reloadCurrentPage();
+        toast.success?.('Application created') ?? toast('Application created');
+      } catch (err) {
+        console.error(err);
+        toast.error?.('Failed to reload applications') ??
+          toast('Failed to reload applications');
+      }
+    }}
+  />
+</div>
       {/* Error banner */}
       {errorMsg && (
         <div
