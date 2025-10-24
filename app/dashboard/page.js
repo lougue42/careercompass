@@ -877,225 +877,234 @@ return (
       )}
     </div>
 
-    {/* Edit Modal */}
-    {editing && (
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit application"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: theme.overlay,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: 16,
-        }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setEditing(null);
-        }}
-      >
-        <form
-          onSubmit={handleUpdate}
+{/* Edit Modal */}
+{editing && (
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="Edit application"
+    style={{
+      position: 'fixed',
+      inset: 0,
+      background: theme.overlay,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 50,
+      padding: '32px 16px'
+    }}
+    onClick={(e) => {
+      if (e.target === e.currentTarget) setEditing(null);
+    }}
+  >
+    <form
+      onSubmit={handleUpdate}
+      style={{
+        background: theme.card,
+        padding: 22,
+        borderRadius: 14,
+        color: theme.text,
+        width: 520,
+        maxWidth: '100%',
+        display: 'grid',
+        gap: 12,
+        border: `1px solid ${theme.border}`,
+        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h3 style={{ margin: 0, fontSize: 18 }}>
+          {saving ? 'Saving…' : 'Edit Application'}
+        </h3>
+        <div
           style={{
-            background: theme.card,
-            padding: 22,
-            borderRadius: 14,
-            color: theme.text,
-            width: 520,
-            maxWidth: '100%',
-            display: 'grid',
-            gap: 12,
-            border: `1px solid ${theme.border}`,
-            boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
+            marginLeft: 'auto',
+            color: theme.mutedText,
+            fontSize: 12
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h3 style={{ margin: 0, fontSize: 18 }}>
-              {saving ? 'Saving…' : 'Edit Application'}
-            </h3>
-            <div
-              style={{
-                marginLeft: 'auto',
-                color: theme.mutedText,
-                fontSize: 12,
-              }}
-            >
-              {editing?.company || ''}
-            </div>
-          </div>
-
-          {/* Basic fields */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label>
-              <div className="mb-1 text-slate-500 text-sm">Company</div>
-              <input
-                ref={firstInputRef}
-                value={form.company}
-                onChange={(e) => setForm({ ...form, company: e.target.value })}
-                style={inputStyle}
-                disabled={saving}
-                placeholder="Company name"
-              />
-            </label>
-
-            <label>
-              <div className="mb-1 text-slate-500 text-sm">Role</div>
-              <input
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                style={inputStyle}
-                disabled={saving}
-                placeholder="Job title"
-              />
-            </label>
-
-            <label>
-              <div className="mb-1 text-slate-500 text-sm">Status</div>
-              <select
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-                style={inputStyle}
-                disabled={saving}
-              >
-                <option>Applied</option>
-                <option>Interview</option>
-                <option>Offer</option>
-                <option>Rejected</option>
-                <option>Wishlist</option>
-              </select>
-            </label>
-
-            <label>
-              <div className="mb-1 text-slate-500 text-sm">Due date</div>
-              <input
-                type="date"
-                value={form.due_date}
-                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                style={inputStyle}
-                disabled={saving}
-              />
-            </label>
-
-            <label className="sm:col-span-2">
-              <div className="mb-1 text-slate-500 text-sm">Next action</div>
-              <input
-                value={form.next_action}
-                onChange={(e) =>
-                  setForm({ ...form, next_action: e.target.value })
-                }
-                style={inputStyle}
-                disabled={saving}
-                placeholder="Email recruiter on Friday"
-              />
-            </label>
-          </div>
-
-{/* Advanced Settings */}
-<details className="mt-2 border-t border-slate-200 pt-3">
-  <summary className="cursor-pointer font-medium text-slate-700">
-    Advanced Settings
-  </summary>
-
-  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">
-        Priority (1 high, 3 low)
+          {editing?.company || ''}
+        </div>
       </div>
-      <input
-        type="number"
-        min={1}
-        max={3}
-        value={form.priority ?? ''}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            priority: e.target.valueAsNumber || 1,
-          })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
 
-    {/* New: Function */}
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Function</div>
-      <input
-        type="text"
-        value={form.function || ''}
-        onChange={(e) => setForm({ ...form, function: e.target.value })}
-        style={inputStyle}
-        disabled={saving}
-        placeholder="e.g., Business Development"
-      />
-    </label>
+      {/* Basic fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Company</div>
+          <input
+            ref={firstInputRef}
+            value={form.company}
+            onChange={(e) => setForm({ ...form, company: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+            placeholder="Company name"
+          />
+        </label>
 
-    {/* New: Outcome */}
-    <label>
-      <div className="mb-1 text-slate-500 text-sm">Outcome</div>
-      <select
-        value={form.outcome || ''}
-        onChange={(e) => setForm({ ...form, outcome: e.target.value })}
-        style={inputStyle}
-        disabled={saving}
-      >
-        <option value="">—</option>
-        <option value="Interview">Interview</option>
-        <option value="Offer">Offer</option>
-        <option value="Rejected">Rejected</option>
-        <option value="Wishlist">Wishlist</option>
-      </select>
-    </label>
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Role</div>
+          <input
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+            placeholder="Job title"
+          />
+        </label>
 
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Location</div>
-      <input
-        value={form.location ?? ''}
-        onChange={(e) =>
-          setForm({ ...form, location: e.target.value || '' })
-        }
-        style={inputStyle}
-        disabled={saving}
-      />
-    </label>
-
-    {/* Notes */}
-    <label className="sm:col-span-2">
-      <div className="mb-1 text-slate-500 text-sm">Notes</div>
-      <textarea
-        value={form.notes ?? ''}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, notes: e.target.value || '' }))
-        }
-        style={inputStyle}
-        rows={3}
-        disabled={saving}
-      />
-    </label>
-  </div>
-</details>
-          {/* Action buttons */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 8,
-              marginTop: 8,
-            }}
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Status</div>
+          <select
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
           >
-            <button type="button" onClick={() => setEditing(null)} style={{ ...btn.base }}>
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} style={{ ...btn.base, ...btn.primary }}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        </form>
+            <option>Applied</option>
+            <option>Interview</option>
+            <option>Offer</option>
+            <option>Rejected</option>
+            <option>Wishlist</option>
+          </select>
+        </label>
+
+        <label>
+          <div className="mb-1 text-slate-500 text-sm">Due date</div>
+          <input
+            type="date"
+            value={form.due_date}
+            onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+            style={inputStyle}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="sm:col-span-2">
+          <div className="mb-1 text-slate-500 text-sm">Next action</div>
+          <input
+            value={form.next_action}
+            onChange={(e) =>
+              setForm({ ...form, next_action: e.target.value })
+            }
+            style={inputStyle}
+            disabled={saving}
+            placeholder="Email recruiter on Friday"
+          />
+        </label>
       </div>
-    )}
-  </main>
+
+      {/* Advanced Settings */}
+      <details className="mt-2 border-t border-slate-200 pt-3">
+        <summary className="cursor-pointer font-medium text-slate-700">
+          Advanced Settings
+        </summary>
+
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">
+              Priority (1 high, 3 low)
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={3}
+              value={form.priority ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  priority: e.target.valueAsNumber || 1
+                })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">Function</div>
+            <input
+              type="text"
+              value={form.function || ''}
+              onChange={(e) => setForm({ ...form, function: e.target.value })}
+              style={inputStyle}
+              disabled={saving}
+              placeholder="e.g., Business Development"
+            />
+          </label>
+
+          <label>
+            <div className="mb-1 text-slate-500 text-sm">Outcome</div>
+            <select
+              value={form.outcome || ''}
+              onChange={(e) => setForm({ ...form, outcome: e.target.value })}
+              style={inputStyle}
+              disabled={saving}
+            >
+              <option value="">—</option>
+              <option value="Interview">Interview</option>
+              <option value="Offer">Offer</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Wishlist">Wishlist</option>
+            </select>
+          </label>
+
+          <label className="sm:col-span-2">
+            <div className="mb-1 text-slate-500 text-sm">Location</div>
+            <input
+              value={form.location ?? ''}
+              onChange={(e) =>
+                setForm({ ...form, location: e.target.value || '' })
+              }
+              style={inputStyle}
+              disabled={saving}
+            />
+          </label>
+
+          <label className="sm:col-span-2">
+            <div className="mb-1 text-slate-500 text-sm">Notes</div>
+            <textarea
+              value={form.notes ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, notes: e.target.value || '' }))
+              }
+              style={inputStyle}
+              rows={3}
+              disabled={saving}
+            />
+          </label>
+        </div>
+      </details>
+
+      {/* Action buttons */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 8,
+          marginTop: 8
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setEditing(null)}
+          style={{ ...btn.base }}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          style={{ ...btn.base, ...btn.primary }}
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </form>
+  </div>
+)}
+
+</main>
 );
 }
