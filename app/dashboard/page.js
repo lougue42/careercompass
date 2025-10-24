@@ -712,8 +712,8 @@ return (
   <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
     <div style={{ overflowX: 'auto' }}>
       <table
-        cellPadding="16"
-        style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, lineHeight: 1.5 }}
+        cellPadding="18"
+        style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, lineHeight: 1.7 }}
       >
        <thead>
   <tr
