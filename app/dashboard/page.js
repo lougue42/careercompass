@@ -4,8 +4,30 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
 import { useToast } from '../components/ToastProvider';
-import { updateApplication } from '../../actions/applications';
 import ConfirmDialog from '../components/ConfirmDialog';
+// Local replacement for the old server action
+async function updateApplication(payload) {
+  if (!payload?.app_uuid) throw new Error('Missing app_uuid in update payload');
+
+  const { data, error } = await supabase
+    .from('applications')
+    .update({
+      company: payload.company,
+      role: payload.role,
+      status: payload.status,
+      next_action: payload.next_action || null,
+      due_date: payload.due_date || null,
+      priority: payload.priority,
+      source: payload.source || null,
+      location: payload.location || null,
+      notes: payload.notes || null,
+    })
+    .eq('app_uuid', payload.app_uuid)
+    .select();
+
+  if (error) throw error;
+  return data?.[0] || null;
+}
 
 export default function Dashboard() {
   const toast = useToast();
@@ -104,7 +126,6 @@ export default function Dashboard() {
   };
 
   // ...rest of Dashboard
-
 
 
   // Edit modal state
