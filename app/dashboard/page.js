@@ -71,7 +71,7 @@ export default function Dashboard() {
   // Stable identifier used consistently (keys, compares, filters)
   const rowKey = (r) => String(r?.app_uuid ?? r?.id);
 
-  // Small helpers
+  // Confirm dialog helpers (single source of truth)
   const openDelete = (row) => setConfirmDelete({ open: true, row, loading: false });
   const closeDelete = () => setConfirmDelete({ open: false, row: null, loading: false });
 
@@ -99,9 +99,6 @@ export default function Dashboard() {
   // Handle input changes
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  // ...rest of your component (fetching, table render, delete confirm handler, etc.)
-
 
   // Create new application
   const handleCreate = async (e) => {
@@ -140,9 +137,6 @@ export default function Dashboard() {
     }
   };
 
-  // ...rest of Dashboard
-
-
   // Edit modal state
   const [editing, setEditing] = useState(null); // null | row being edited
   const [saving, setSaving] = useState(false);
@@ -166,8 +160,9 @@ export default function Dashboard() {
 
   // Filter
   const [statusFilter, setStatusFilter] = useState('');
- // Update Tracker 
- const [lastUpdated, setLastUpdated] = useState(new Date());
+  // Update Tracker
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
   // Refs
   const addFormRef = useRef(null);
   const firstInputRef = useRef(null);
@@ -181,7 +176,7 @@ export default function Dashboard() {
   // Load rows
   async function loadApps() {
     setLoading(true);
-    setErrorMsg('');
+    setErrorMsg(null); // keep null/boolean logic consistent
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -206,7 +201,8 @@ export default function Dashboard() {
 
       const ascending = sortDir === 'asc';
       query = query.order(sortBy, { ascending, nullsFirst: false });
-      if (sortBy !== 'created_at') query = query.order('created_at', { ascending: false, nullsFirst: false });
+      if (sortBy !== 'created_at')
+        query = query.order('created_at', { ascending: false, nullsFirst: false });
       query = query.order('app_uuid', { ascending: true });
 
       const { data, error, count } = await query.range(from, to);
@@ -240,49 +236,48 @@ export default function Dashboard() {
     await loadApps();
   }
 
-// Delete (via ConfirmDialog, no RPC — direct table delete)
-async function deleteApplicationByUuid(app_uuid) {
-  const { error } = await supabase.from('applications').delete().eq('app_uuid', app_uuid);
-  if (error) throw error;
-}
-
-// If your action buttons call handleDelete(r), keep this bridge to open the dialog
-function handleDelete(row) {
-  askDelete(row);
-}
-
-function askDelete(row) {
-  if (!row || !row.app_uuid) {
-    toast('Missing row id');
-    return;
-  }
-  setConfirm({ open: true, row, loading: false });
-}
-
-async function confirmDelete() {
-  const row = confirm?.row;
-  if (!row?.app_uuid) {
-    setConfirm({ open: false, row: null, loading: false });
-    return;
+  // Direct table delete (no RPC)
+  async function deleteApplicationByUuid(app_uuid) {
+    const { error } = await supabase.from('applications').delete().eq('app_uuid', app_uuid);
+    if (error) throw error;
   }
 
-  try {
-    setConfirm((c) => ({ ...c, loading: true }));
-    setDeletingId(row.app_uuid);
-
-    await deleteApplicationByUuid(row.app_uuid);
-
-    await reloadCurrentPage?.();
-    setLastUpdated?.(new Date()); // refresh dynamic timestamp
-    toast('Application deleted');
-  } catch (err) {
-    console.error('Delete error (direct):', err);
-    toast('Error deleting application');
-  } finally {
-    setDeletingId(null);
-    setConfirm({ open: false, row: null, loading: false });
+  // Bridge so existing buttons that call handleDelete(r) still work
+  function handleDelete(row) {
+    if (!row) return;
+    openDelete(row);
   }
-}
+
+  // Confirm dialog action
+  const confirmDeleteAction = async () => {
+    const row = confirmDelete.row;
+    if (!row) return closeDelete();
+
+    const id = rowKey(row);
+    setConfirmDelete((c) => ({ ...c, loading: true }));
+    setDeletingId(id);
+
+    // optimistic remove
+    const prevRows = rows;
+    setRows((r) => r.filter((x) => rowKey(x) !== id));
+
+    try {
+      await deleteApplicationByUuid(row.app_uuid ?? row.id);
+      await reloadCurrentPage();
+      setLastUpdated?.(new Date());
+      toast('Application deleted');
+    } catch (err) {
+      setRows(prevRows); // rollback on failure
+      console.error('Delete error:', err);
+      toast('Error deleting: ' + (err.message || String(err)));
+    } finally {
+      setDeletingId(null);
+      closeDelete();
+    }
+  };
+
+  // ...render (table uses key={rowKey(r)}, Delete button calls openDelete(r), and ConfirmDialog below) ...
+  // <ConfirmDialog open={confirmDelete.open} loading={confirmDelete.loading} onClose={closeDelete} onConfirm={confirmDeleteAction} title="Delete application?" description="This action cannot be undone." confirmText="Delete" />
 
   // Edit flow
   function handleEdit(row) {
@@ -1227,16 +1222,16 @@ return (
 
 {/* Confirm delete dialog (mounted at root level) */}
 <ConfirmDialog
-  open={confirm.open}
+  open={confirmDelete.open}
   title="Delete application?"
   description="This action cannot be undone."
   confirmText="Delete"
   cancelText="Cancel"
-  onCancel={() => setConfirm({ open: false, row: null, loading: false })}
-  onConfirm={confirmDelete}
-  loading={confirm.loading}
+  onCancel={closeDelete}
+  onClose={closeDelete}
+  onConfirm={confirmDeleteAction}
+  loading={confirmDelete.loading}
 />
-
 
 </main>
 );
