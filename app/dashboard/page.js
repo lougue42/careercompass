@@ -236,57 +236,71 @@ export default function Dashboard() {
     await loadApps();
   }
 
-  // Direct table delete, aware of app_uuid or id
-  async function deleteApplication(row) {
-    const app_uuid = row?.app_uuid ?? null;
-    const id = row?.id ?? null;
+// Direct table delete, aware of app_uuid or id
+async function deleteApplication(row) {
+  const app_uuid = row?.app_uuid ?? null;
+  const id = row?.id ?? null;
 
-    if (app_uuid) {
-      const { error } = await supabase.from('applications').delete().eq('app_uuid', app_uuid);
-      if (error) throw error;
-      return;
-    }
-    if (id) {
-      const { error } = await supabase.from('applications').delete().eq('id', id);
-      if (error) throw error;
-      return;
-    }
-    throw new Error('Row has no identifier (missing app_uuid and id).');
+  if (app_uuid) {
+    const { data, error } = await supabase
+      .from('applications')
+      .delete()
+      .eq('app_uuid', app_uuid)
+      .select('app_uuid')
+      .maybeSingle(); // null if 0 rows (RLS or not found)
+    if (error) throw error;
+    if (!data) throw new Error('Delete blocked by policy or row not found.');
+    return;
   }
 
-  // Bridge so existing buttons that call handleDelete(r) still work
-  function handleDelete(row) {
-    if (!row) return;
-    openDelete(row);
+  if (id) {
+    const { data, error } = await supabase
+      .from('applications')
+      .delete()
+      .eq('id', id)
+      .select('id')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error('Delete blocked by policy or row not found.');
+    return;
   }
 
-  // Confirm dialog action
-  const confirmDeleteAction = async () => {
-    const row = confirmDelete.row;
-    if (!row) return closeDelete();
+  throw new Error('Row has no identifier (missing app_uuid and id).');
+}
 
-    const id = rowIdentifier(row);
-    setConfirmDelete((c) => ({ ...c, loading: true }));
-    setDeletingId(id);
+// Bridge so existing buttons that call handleDelete(r) still work
+function handleDelete(row) {
+  if (!row) return;
+  openDelete(row);
+}
 
-    // optimistic remove
-    const prevRows = rows;
-    setRows((r) => r.filter((x) => rowIdentifier(x) !== id));
+// Confirm dialog action
+const confirmDeleteAction = async () => {
+  const row = confirmDelete.row;
+  if (!row) return closeDelete();
 
-    try {
-      await deleteApplication(row); // <-- identifier-aware delete
-      await reloadCurrentPage();
-      setLastUpdated?.(new Date());
-      toast('Application deleted');
-    } catch (err) {
-      setRows(prevRows); // rollback on failure
-      console.error('Delete error:', err);
-      toast('Error deleting: ' + (err.message || String(err)));
-    } finally {
-      setDeletingId(null);
-      closeDelete();
-    }
-  };
+  const id = rowIdentifier(row);
+  setConfirmDelete((c) => ({ ...c, loading: true }));
+  setDeletingId(id);
+
+  // optimistic remove
+  const prevRows = rows;
+  setRows((r) => r.filter((x) => rowIdentifier(x) !== id));
+
+  try {
+    await deleteApplication(row); // <-- identifier-aware delete
+    await reloadCurrentPage();
+    setLastUpdated?.(new Date());
+    toast('Application deleted');
+  } catch (err) {
+    setRows(prevRows); // rollback on failure
+    console.error('Delete error:', err);
+    toast('Error deleting: ' + (err.message || String(err)));
+  } finally {
+    setDeletingId(null);
+    closeDelete();
+  }
+};
 
   // Edit flow
   function handleEdit(row) {
