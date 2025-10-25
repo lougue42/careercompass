@@ -23,15 +23,26 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
     notes: '',
   });
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const onChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const { error } = await supabase.from('applications').insert([form]);
+      // Send nulls instead of empty strings for optional fields
+      const payload = {
+        ...form,
+        industry: form.industry || null,
+        next_action: form.next_action || null,
+        notes: form.notes || null,
+        due_date: form.due_date || null, // works if column is date or timestamptz
+      };
+
+      const { error } = await supabase.from('applications').insert([payload]);
       if (error) throw error;
+
       toast('Application added');
       setOpen(false);
       setForm({
@@ -43,7 +54,7 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
         due_date: '',
         notes: '',
       });
-      await onCreated?.();
+      await onCreated?.(); // parent refresh
     } catch (err) {
       console.error(err);
       toast('Error adding application');
@@ -51,6 +62,8 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
       setSaving(false);
     }
   };
+
+  const FORM_ID = 'add-app-form';
 
   return (
     <>
@@ -69,7 +82,7 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
           {/* Overlay */}
           <div
             className="absolute inset-0 bg-slate-900/50"
-            onClick={() => setOpen(false)}
+            onClick={() => (!saving ? setOpen(false) : null)}
           />
 
           {/* Slide-over panel */}
@@ -89,7 +102,7 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
                 </p>
               </div>
               <button
-                onClick={() => setOpen(false)}
+                onClick={() => (!saving ? setOpen(false) : null)}
                 className="rounded-xl px-3 py-2 text-sm"
                 style={{ background: '#f3f4f6', border: '1px solid #e5e7eb' }}
               >
@@ -98,7 +111,7 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreate} className="flex-1 overflow-y-auto px-5 pb-24">
+            <form id={FORM_ID} onSubmit={handleCreate} className="flex-1 overflow-y-auto px-5 pb-24">
               {/* Basics */}
               <h3 className="mt-4 text-sm font-medium uppercase tracking-wide text-slate-500">
                 Basics
@@ -206,10 +219,7 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
                     {[
                       { label: 'Today', days: 0 },
                       { label: '+3d', days: 3 },
-                      {
-                        label: 'Next Mon',
-                        days: ((7 - new Date().getDay() + 1) % 7) || 7,
-                      },
+                      { label: 'Next Mon', days: ((7 - new Date().getDay() + 1) % 7) || 7 },
                     ].map(({ label, days }) => (
                       <button
                         key={label}
@@ -260,7 +270,10 @@ export default function AddApplicationForm({ onCreated }: AddApplicationFormProp
               >
                 Cancel
               </button>
+
+              {/* Point this at the form above so it submits even outside the form */}
               <button
+                form={FORM_ID}
                 type="submit"
                 disabled={saving}
                 className="rounded-xl px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
