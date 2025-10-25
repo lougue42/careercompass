@@ -5,9 +5,11 @@ import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
 import { useToast } from '../components/ToastProvider';
 import { updateApplication } from '../../actions/applications';
-
+import ConfirmDialog from '../components/ConfirmDialog';
 export default function Dashboard() {
   const toast = useToast();
+  const [confirm, setConfirm] = useState({ open: false, row: null, loading: false });
+
 
   // Theme
   const theme = {
@@ -154,24 +156,25 @@ export default function Dashboard() {
     await loadApps();
   }
 
-// Delete (still via RPC you already have)
-async function handleDelete(row) {
-  if (!row) return alert('Missing row.');
-  if (!row.app_uuid) return alert('This row has no app_uuid; refresh and try again.');
-  if (!confirm('Delete this application?')) return;
+// Delete (via ConfirmDialog + RPC)
+function askDelete(row) {
+  if (!row || !row.app_uuid) return toast('Missing row id');
+  setConfirm({ open: true, row, loading: false });
+}
 
-  setDeletingId(row.app_uuid);
+async function confirmDelete() {
+  setConfirm((c) => ({ ...c, loading: true }));
   try {
-    const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: row.app_uuid });
+    const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: confirm.row.app_uuid });
     if (error) throw error;
     await reloadCurrentPage();
     setLastUpdated(new Date()); // ✅ refresh dynamic timestamp
     toast('Application deleted');
   } catch (err) {
     console.error('Delete error (rpc):', err);
-    alert('Error deleting: ' + (err.message || String(err)));
+    toast('Error deleting application');
   } finally {
-    setDeletingId(null);
+    setConfirm({ open: false, row: null, loading: false });
   }
 }
   // Edit flow
@@ -555,13 +558,12 @@ function pill(tone) {
           >
             Edit
           </button>
-          <button
-            onClick={() => handleDelete(r)}
-            disabled={isDeleting}
-            className="inline-flex items-center justify-center rounded-lg bg-red-600 text-white px-3 py-2 text-sm font-medium disabled:opacity-50 active:scale-[.98]"
-          >
-            {isDeleting ? 'Deleting…' : 'Delete'}
-          </button>
+         <button
+  onClick={() => askDelete(r)}
+  className="inline-flex items-center justify-center rounded-lg bg-red-600 text-white px-3 py-2 text-sm font-medium hover:bg-red-700 active:scale-[.98] transition disabled:opacity-50"
+>
+  Delete
+</button>
         </div>
       </div>
     );
@@ -1079,33 +1081,45 @@ return (
         </div>
       </details>
 
-      {/* Action buttons */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 8
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setEditing(null)}
-          style={{ ...btn.base }}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
-          style={{ ...btn.base, ...btn.primary }}
-        >
-          {saving ? 'Saving…' : 'Save'}
-        </button>
-      </div>
-    </form>
-  </div>
+{/* Action buttons */}
+<div
+  style={{
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 8,
+  }}
+>
+  <button
+    type="button"
+    onClick={() => setEditing(null)}
+    style={{ ...btn.base }}
+  >
+    Cancel
+  </button>
+  <button
+    type="submit"
+    disabled={saving}
+    style={{ ...btn.base, ...btn.primary }}
+  >
+    {saving ? 'Saving…' : 'Save'}
+  </button>
+</div>
+</form>
+</div>
 )}
+
+{/* Confirm delete dialog (mounted at root level) */}
+<ConfirmDialog
+  open={confirm.open}
+  title="Delete application?"
+  description="This action cannot be undone."
+  confirmText="Delete"
+  cancelText="Cancel"
+  onCancel={() => setConfirm({ open: false, row: null, loading: false })}
+  onConfirm={confirmDelete}
+  loading={confirm.loading}
+/>
 
 </main>
 );
