@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 
 const STYLES = {
   Applied:   'bg-blue-50 text-blue-700 ring-blue-200',
@@ -8,13 +9,11 @@ const STYLES = {
   Wishlist:  'bg-slate-50 text-slate-700 ring-slate-200',
 };
 
-export default function StatusBadge({ status }) {
+export default function StatusBadge({ status = '' }) {
   const cls = STYLES[status] || STYLES.Wishlist;
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${cls}`}
-    >
-      {status}
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${cls}`}>
+      {status || '—'}
     </span>
   );
 }
