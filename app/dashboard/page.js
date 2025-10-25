@@ -851,110 +851,128 @@ return (
         cellPadding="20"
         style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, lineHeight: 1.85 }}
       >
-       <thead>
-  <tr
-    style={{
-      position: 'sticky',
-      top: 0,
-      background: theme.header,
-      zIndex: 1,
-      borderBottom: `1px solid ${theme.border}`,
-    }}
-  >
-    <th
-      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
-      onClick={() => handleSort('company')}
-    >
-      Company {sortBy === 'company' && (sortDir === 'asc' ? '↑' : '↓')}
-    </th>
-    <th
-      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
-      onClick={() => handleSort('role')}
-    >
-      Role {sortBy === 'role' && (sortDir === 'asc' ? '↑' : '↓')}
-    </th>
-    <th style={{ textAlign: 'left' }}>Industry</th>
-    <th
-      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
-      onClick={() => handleSort('status')}
-    >
-      Status {sortBy === 'status' && (sortDir === 'asc' ? '↑' : '↓')}
-    </th>
-    <th style={{ textAlign: 'left' }}>Next action</th>
-    <th
-      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
-      onClick={() => handleSort('due_date')}
-    >
-      Due {sortBy === 'due_date' && (sortDir === 'asc' ? '↑' : '↓')}
-    </th>
-    <th
-      style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
-      onClick={() => handleSort('created_at')}
-    >
-      Added {sortBy === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
-    </th>
-    <th style={{ textAlign: 'left' }}>Actions</th>
-  </tr>
-</thead>
-<tbody>
-  {rows.map((r, idx) => {
-  const key = rowIdentifier(r);
-  const isDeleting = deletingId === key;
-  const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
-    return (
-      <tr
-        key={key}
-        style={{
-          borderBottom: `1px solid ${theme.border}`,
-          background: zebra,
-          transition: 'background 120ms ease',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
-      >
-        <td>
-          <div className="text-base font-semibold leading-tight">
-            {fmt(r.company)}
-          </div>
-        </td>
-        <td>{fmt(r.role)}</td>
-        <td>{fmt(r.industry)}</td>
-        <td><StatusBadge status={r.status} /></td>
-        <td
-          style={{
-            maxWidth: 280,
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-          }}
-        >
-          {fmt(r.next_action)}
-        </td>
-        <td><DuePill due={r.due_date} /></td>
-        <td>{fmtDate(r.created_at)}</td>
-        <td>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
-            <button
-              type="button"
-              style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
-              onClick={(e) => { e.stopPropagation(); handleEdit(r); }}
-              disabled={isDeleting}
-              aria-label="Edit application"
+        <thead>
+          <tr
+            style={{
+              position: 'sticky',
+              top: 0,
+              background: theme.header,
+              zIndex: 1,
+              borderBottom: `1px solid ${theme.border}`,
+            }}
+          >
+            <th
+              style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+              onClick={() => handleSort('company')}
             >
-              Edit
-            </button>
-            <button
-              type="button"
-              style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
-              onClick={(e) => { e.stopPropagation(); handleDelete(r); }}  // opens confirm
-              disabled={isDeleting}
-              aria-label="Delete application"
+              Company {sortBy === 'company' && (sortDir === 'asc' ? '↑' : '↓')}
+            </th>
+            <th
+              style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+              onClick={() => handleSort('role')}
             >
-              {isDeleting ? 'Deleting…' : 'Delete'}
-            </button>
-          </div>
-        </td>
-      </tr>
+              Role {sortBy === 'role' && (sortDir === 'asc' ? '↑' : '↓')}
+            </th>
+            <th style={{ textAlign: 'left' }}>Industry</th>
+            <th
+              style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+              onClick={() => handleSort('status')}
+            >
+              Status {sortBy === 'status' && (sortDir === 'asc' ? '↑' : '↓')}
+            </th>
+            <th style={{ textAlign: 'left' }}>Next action</th>
+            <th
+              style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+              onClick={() => handleSort('due_date')}
+            >
+              Due {sortBy === 'due_date' && (sortDir === 'asc' ? '↑' : '↓')}
+            </th>
+            <th
+              style={{ textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+              onClick={() => handleSort('created_at')}
+            >
+              Added {sortBy === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
+            </th>
+            <th style={{ textAlign: 'left' }}>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((r, idx) => {
+            const key = rowIdentifier(r);
+            const isDeleting = deletingId === key;
+            const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
+
+            return (
+              <tr
+                key={key}
+                style={{
+                  borderBottom: `1px solid ${theme.border}`,
+                  background: zebra,
+                  transition: 'background 120ms ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
+              >
+                <td>
+                  <div className="text-base font-semibold leading-tight">
+                    {fmt(r.company)}
+                  </div>
+                </td>
+                <td>{fmt(r.role)}</td>
+                <td>{fmt(r.industry)}</td>
+                <td><StatusBadge status={r.status} /></td>
+                <td
+                  style={{
+                    maxWidth: 280,
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {fmt(r.next_action)}
+                </td>
+                <td><DuePill due={r.due_date} /></td>
+                <td>{fmtDate(r.created_at)}</td>
+                <td>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 10,
+                      alignItems: 'center',
+                      marginTop: 4,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(r);
+                      }}
+                      disabled={isDeleting}
+                      aria-label="Edit application"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDelete(r);
+                      }}
+                      disabled={isDeleting}
+                      aria-label="Delete application"
+                    >
+                      {isDeleting ? 'Deleting…' : 'Delete'}
+                    </button>
+                    {/* opens confirm dialog */}
+                  </div>
+                </td>
+              </tr>
     );
   })}
 </tbody>
