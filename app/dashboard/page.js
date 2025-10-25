@@ -775,7 +775,7 @@ return (
         </div>
       )}
 
-      {/* Table */}
+{/* Table */}
 {!loading && rows.length > 0 && (
   <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
     <div style={{ overflowX: 'auto' }}>
@@ -861,16 +861,18 @@ return (
  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
 
                     <button
+                      type="button"
                       style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
-                      onClick={() => handleEdit(r)}
+                      onClick={(e) => { e.stopPropagation(); handleEdit(r); }}
                       disabled={isDeleting}
                       aria-label="Edit application"
                     >
                       Edit
                     </button>
                     <button
+                      type="button"
                       style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
-                      onClick={() => handleDelete(r)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
                       disabled={isDeleting}
                       aria-label="Delete application"
                     >
@@ -884,7 +886,6 @@ return (
         </tbody>
       </table>
     </div>
-
     {/* Bottom controls */}
           <div
             style={{
