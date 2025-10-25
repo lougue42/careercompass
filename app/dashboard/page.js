@@ -69,7 +69,9 @@ export default function Dashboard() {
   });
 
   // Stable identifier used consistently (keys, compares, filters)
-  const rowKey = (r) => String(r?.app_uuid ?? r?.id);
+ // Stable identifier used consistently (keys, compares, filters)
+const rowIdentifier = (r) => String(r?.app_uuid ?? r?.id);
+
 
   // Confirm dialog helpers (single source of truth)
   const openDelete = (row) => setConfirmDelete({ open: true, row, loading: false });
@@ -236,49 +238,65 @@ export default function Dashboard() {
     await loadApps();
   }
 
-  // Direct table delete (no RPC)
-  async function deleteApplicationByUuid(app_uuid) {
+// Helper: unified identifier used everywhere (keying, optimistic remove, etc.)
+function rowIdentifier(row) {
+  return row?.app_uuid ?? row?.id ?? null;
+}
+
+// Direct table delete, aware of app_uuid or id
+async function deleteApplication(row) {
+  const app_uuid = row?.app_uuid ?? null;
+  const id = row?.id ?? null;
+
+  if (app_uuid) {
     const { error } = await supabase.from('applications').delete().eq('app_uuid', app_uuid);
     if (error) throw error;
+    return;
   }
-
-  // Bridge so existing buttons that call handleDelete(r) still work
-  function handleDelete(row) {
-    if (!row) return;
-    openDelete(row);
+  if (id) {
+    const { error } = await supabase.from('applications').delete().eq('id', id);
+    if (error) throw error;
+    return;
   }
+  throw new Error('Row has no identifier (missing app_uuid and id).');
+}
 
-  // Confirm dialog action
-  const confirmDeleteAction = async () => {
-    const row = confirmDelete.row;
-    if (!row) return closeDelete();
+// Bridge so existing buttons that call handleDelete(r) still work
+function handleDelete(row) {
+  if (!row) return;
+  openDelete(row);
+}
 
-    const id = rowKey(row);
-    setConfirmDelete((c) => ({ ...c, loading: true }));
-    setDeletingId(id);
+// Confirm dialog action
+const confirmDeleteAction = async () => {
+  const row = confirmDelete.row;
+  if (!row) return closeDelete();
 
-    // optimistic remove
-    const prevRows = rows;
-    setRows((r) => r.filter((x) => rowKey(x) !== id));
+  const id = rowIdentifier(row);
+  setConfirmDelete((c) => ({ ...c, loading: true }));
+  setDeletingId(id);
 
-    try {
-      await deleteApplicationByUuid(row.app_uuid ?? row.id);
-      await reloadCurrentPage();
-      setLastUpdated?.(new Date());
-      toast('Application deleted');
-    } catch (err) {
-      setRows(prevRows); // rollback on failure
-      console.error('Delete error:', err);
-      toast('Error deleting: ' + (err.message || String(err)));
-    } finally {
-      setDeletingId(null);
-      closeDelete();
-    }
-  };
+  // optimistic remove
+  const prevRows = rows;
+  setRows((r) => r.filter((x) => rowIdentifier(x) !== id));
 
-  // ...render (table uses key={rowKey(r)}, Delete button calls openDelete(r), and ConfirmDialog below) ...
-  // <ConfirmDialog open={confirmDelete.open} loading={confirmDelete.loading} onClose={closeDelete} onConfirm={confirmDeleteAction} title="Delete application?" description="This action cannot be undone." confirmText="Delete" />
+  try {
+    await deleteApplication(row); // <-- identifier-aware delete
+    await reloadCurrentPage();
+    setLastUpdated?.(new Date());
+    toast('Application deleted');
+  } catch (err) {
+    setRows(prevRows); // rollback on failure
+    console.error('Delete error:', err);
+    toast('Error deleting: ' + (err.message || String(err)));
+  } finally {
+    setDeletingId(null);
+    closeDelete();
+  }
+};
 
+// ...render (table uses key={rowIdentifier(r)}, Delete button calls openDelete(r), and ConfirmDialog below) ...
+// <ConfirmDialog open={confirmDelete.open} loading={confirmDelete.loading} onClose={closeDelete} onConfirm={confirmDeleteAction} title="Delete application?" description="This action cannot be undone." confirmText="Delete" />
   // Edit flow
   function handleEdit(row) {
     setEditing(row);
@@ -651,21 +669,22 @@ function pill(tone) {
           </div>
         </div>
 
-        {/* Advanced fields are not shown on the card */}
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            onClick={() => handleEdit(r)}
-            disabled={isDeleting}
-            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 active:scale-[.98]"
-          >
-            Edit
-          </button>
-         <button
-  onClick={() => askDelete(r)}
-  className="inline-flex items-center justify-center rounded-lg bg-red-600 text-white px-3 py-2 text-sm font-medium hover:bg-red-700 active:scale-[.98] transition disabled:opacity-50"
->
-  Delete
-</button>
+ {/* Advanced fields are not shown on the card */}
+<div className="mt-4 flex items-center gap-2">
+  <button
+    onClick={() => handleEdit(r)}
+    disabled={isDeleting}
+    className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 active:scale-[.98]"
+  >
+    Edit
+  </button>
+  <button
+    onClick={() => handleDelete(r)}   // ✅ renamed to match your defined function
+    disabled={isDeleting}
+    className="inline-flex items-center justify-center rounded-lg bg-red-600 text-white px-3 py-2 text-sm font-medium hover:bg-red-700 active:scale-[.98] transition disabled:opacity-50"
+  >
+    Delete
+  </button>
         </div>
       </div>
     );
@@ -820,15 +839,14 @@ return (
         </div>
       )}
 
-      {/* Small-screen cards */}
-      {!loading && rows.length > 0 && (
-        <div className="md:hidden space-y-3">
-         {rows.map((r) => (
-  <AppCard key={rowKey(r)} r={r} />
-))}
-        </div>
-      )}
-
+{/* Small-screen cards */}
+{!loading && rows.length > 0 && (
+  <div className="md:hidden space-y-3">
+    {rows.map((r) => (
+      <AppCard key={rowIdentifier(r)} r={r} />
+    ))}
+  </div>
+)}
 {/* Table */}
 {!loading && rows.length > 0 && (
   <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -884,10 +902,9 @@ return (
 </thead>
 <tbody>
   {rows.map((r, idx) => {
-    const key = rowKey(r);
-    const isDeleting = deletingId === key;
-    const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
-
+  const key = rowIdentifier(r);
+  const isDeleting = deletingId === key;
+  const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
     return (
       <tr
         key={key}
