@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import AddApplicationForm from './AddApplicationForm';
 import { useToast } from '../components/ToastProvider';
 import ConfirmDialog from '../components/ConfirmDialog';
+
 // Local replacement for the old server action
 async function updateApplication(payload) {
   if (!payload?.app_uuid) throw new Error('Missing app_uuid in update payload');
@@ -31,7 +32,6 @@ async function updateApplication(payload) {
 
 export default function Dashboard() {
   const toast = useToast();
-  const [confirm, setConfirm] = useState({ open: false, row: null, loading: false });
   const [adding, setAdding] = useState(false);
 
   // Theme
@@ -60,8 +60,20 @@ export default function Dashboard() {
   // Data & UI state
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null); // null when no error
+  const [deletingId, setDeletingId] = useState(null); // string | null
+  const [confirmDelete, setConfirmDelete] = useState({
+    open: false,
+    row: null,
+    loading: false,
+  });
+
+  // Stable identifier used consistently (keys, compares, filters)
+  const rowKey = (r) => String(r?.app_uuid ?? r?.id);
+
+  // Small helpers
+  const openDelete = (row) => setConfirmDelete({ open: true, row, loading: false });
+  const closeDelete = () => setConfirmDelete({ open: false, row: null, loading: false });
 
   // Form state for Add Application
   const [form, setForm] = useState({
@@ -87,6 +99,9 @@ export default function Dashboard() {
   // Handle input changes
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  // ...rest of your component (fetching, table render, delete confirm handler, etc.)
+
 
   // Create new application
   const handleCreate = async (e) => {
@@ -813,9 +828,9 @@ return (
       {/* Small-screen cards */}
       {!loading && rows.length > 0 && (
         <div className="md:hidden space-y-3">
-          {rows.map((r, idx) => (
-            <AppCard key={(r.app_uuid ?? r.id ?? r.created_at) + ':' + idx} r={r} />
-          ))}
+         {rows.map((r) => (
+  <AppCard key={rowKey(r)} r={r} />
+))}
         </div>
       )}
 
@@ -872,64 +887,72 @@ return (
     <th style={{ textAlign: 'left' }}>Actions</th>
   </tr>
 </thead>
-        <tbody>
-          {rows.map((r, idx) => {
-            const key = r.app_uuid ?? r.id ?? r.created_at ?? idx;
-            const isDeleting = deletingId === (r.app_uuid ?? r.id ?? r.created_at);
-            const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
-            return (
-              <tr
-                key={key}
-                style={{
-                  borderBottom: `1px solid ${theme.border}`,
-                  background: zebra,
-                  transition: 'background 120ms ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
-              >
-                <td>
-                  <div className="text-base font-semibold leading-tight">
-                    {fmt(r.company)}
-                  </div>
-                </td>
-                <td>{fmt(r.role)}</td>
-                <td>{fmt(r.industry)}</td>
-                <td><StatusBadge status={r.status} /></td>
-                <td style={{ maxWidth: 280, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                  {fmt(r.next_action)}
-                </td>
-                <td><DuePill due={r.due_date} /></td>
-                <td>{fmtDate(r.created_at)}</td>
-                <td>
- <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
+<tbody>
+  {rows.map((r, idx) => {
+    const key = rowKey(r);
+    const isDeleting = deletingId === key;
+    const zebra = idx % 2 === 1 ? '#fbfbfd' : theme.card;
 
-                    <button
-                      type="button"
-                      style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
-                      onClick={(e) => { e.stopPropagation(); handleEdit(r); }}
-                      disabled={isDeleting}
-                      aria-label="Edit application"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
-                      onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
-                      disabled={isDeleting}
-                      aria-label="Delete application"
-                    >
-                      {isDeleting ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    return (
+      <tr
+        key={key}
+        style={{
+          borderBottom: `1px solid ${theme.border}`,
+          background: zebra,
+          transition: 'background 120ms ease',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = zebra)}
+      >
+        <td>
+          <div className="text-base font-semibold leading-tight">
+            {fmt(r.company)}
+          </div>
+        </td>
+        <td>{fmt(r.role)}</td>
+        <td>{fmt(r.industry)}</td>
+        <td><StatusBadge status={r.status} /></td>
+        <td
+          style={{
+            maxWidth: 280,
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+          }}
+        >
+          {fmt(r.next_action)}
+        </td>
+        <td><DuePill due={r.due_date} /></td>
+        <td>{fmtDate(r.created_at)}</td>
+        <td>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
+            <button
+              type="button"
+              style={{ ...btn.base, ...btn.primary, ...(isDeleting ? btn.disabled : {}) }}
+              onClick={(e) => { e.stopPropagation(); handleEdit(r); }}
+              disabled={isDeleting}
+              aria-label="Edit application"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              style={{ ...btn.base, ...btn.danger, ...(isDeleting ? btn.disabled : {}) }}
+              onClick={(e) => { e.stopPropagation(); handleDelete(r); }}  // opens confirm
+              disabled={isDeleting}
+              aria-label="Delete application"
+            >
+              {isDeleting ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+</table>
+</div>
+
     {/* Bottom controls */}
           <div
             style={{
