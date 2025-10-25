@@ -6,12 +6,11 @@ import AddApplicationForm from './AddApplicationForm';
 import { useToast } from '../components/ToastProvider';
 import { updateApplication } from '../../actions/applications';
 import ConfirmDialog from '../components/ConfirmDialog';
-import StatusBadge from '../components/StatusBadge';
 
 export default function Dashboard() {
   const toast = useToast();
   const [confirm, setConfirm] = useState({ open: false, row: null, loading: false });
-
+  const [adding, setAdding] = useState(false);
 
   // Theme
   const theme = {
@@ -42,17 +41,19 @@ export default function Dashboard() {
   const [errorMsg, setErrorMsg] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
+  // Form state for Add Application
   const [form, setForm] = useState({
     company: '',
     role: '',
-    status: '',
+    status: 'Applied',
+    industry: '',
     next_action: '',
     due_date: '',
     // Advanced
     interest_level: '',
     energy_level: '',
     days_to_respond: '',
-    notes: '',            // added to match handleEdit
+    notes: '',
     notes_private: '',
     source: '',
     location: '',
@@ -60,6 +61,51 @@ export default function Dashboard() {
     outcome: '',
     priority: '2',
   });
+
+  // Handle input changes
+  const onChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  // Create new application
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('applications').insert([form]);
+      if (error) throw error;
+
+      toast('Application added');
+
+      // reset the form for a quick follow-up entry
+      setForm({
+        company: '',
+        role: '',
+        status: 'Applied',
+        industry: '',
+        next_action: '',
+        due_date: '',
+        interest_level: '',
+        energy_level: '',
+        days_to_respond: '',
+        notes: '',
+        notes_private: '',
+        source: '',
+        location: '',
+        function: '',
+        outcome: '',
+        priority: '2',
+      });
+
+      setAdding(false);
+      await reloadCurrentPage?.();
+    } catch (err) {
+      console.error('Error adding application:', err);
+      toast('Error adding application');
+    }
+  };
+
+  // ...rest of Dashboard
+
+
 
   // Edit modal state
   const [editing, setEditing] = useState(null); // null | row being edited
