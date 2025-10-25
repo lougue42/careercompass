@@ -225,27 +225,50 @@ export default function Dashboard() {
     await loadApps();
   }
 
-// Delete (via ConfirmDialog + RPC)
+// Delete (via ConfirmDialog, no RPC — direct table delete)
+async function deleteApplicationByUuid(app_uuid) {
+  const { error } = await supabase.from('applications').delete().eq('app_uuid', app_uuid);
+  if (error) throw error;
+}
+
+// If your action buttons call handleDelete(r), keep this bridge to open the dialog
+function handleDelete(row) {
+  askDelete(row);
+}
+
 function askDelete(row) {
-  if (!row || !row.app_uuid) return toast('Missing row id');
+  if (!row || !row.app_uuid) {
+    toast('Missing row id');
+    return;
+  }
   setConfirm({ open: true, row, loading: false });
 }
 
 async function confirmDelete() {
-  setConfirm((c) => ({ ...c, loading: true }));
+  const row = confirm?.row;
+  if (!row?.app_uuid) {
+    setConfirm({ open: false, row: null, loading: false });
+    return;
+  }
+
   try {
-    const { error } = await supabase.rpc('app_delete_by_uuid', { p_uuid: confirm.row.app_uuid });
-    if (error) throw error;
-    await reloadCurrentPage();
-    setLastUpdated(new Date()); // ✅ refresh dynamic timestamp
+    setConfirm((c) => ({ ...c, loading: true }));
+    setDeletingId(row.app_uuid);
+
+    await deleteApplicationByUuid(row.app_uuid);
+
+    await reloadCurrentPage?.();
+    setLastUpdated?.(new Date()); // refresh dynamic timestamp
     toast('Application deleted');
   } catch (err) {
-    console.error('Delete error (rpc):', err);
+    console.error('Delete error (direct):', err);
     toast('Error deleting application');
   } finally {
+    setDeletingId(null);
     setConfirm({ open: false, row: null, loading: false });
   }
 }
+
   // Edit flow
   function handleEdit(row) {
     setEditing(row);
