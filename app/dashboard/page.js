@@ -238,10 +238,6 @@ const rowIdentifier = (r) => String(r?.app_uuid ?? r?.id);
     await loadApps();
   }
 
-// Helper: unified identifier used everywhere (keying, optimistic remove, etc.)
-function rowIdentifier(row) {
-  return row?.app_uuid ?? row?.id ?? null;
-}
 
 // Direct table delete, aware of app_uuid or id
 async function deleteApplication(row) {
