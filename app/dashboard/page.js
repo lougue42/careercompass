@@ -6,6 +6,8 @@ import AddApplicationForm from './AddApplicationForm';
 import { useToast } from '../components/ToastProvider';
 import { updateApplication } from '../../actions/applications';
 import ConfirmDialog from '../components/ConfirmDialog';
+import StatusBadge from '../components/StatusBadge';
+
 export default function Dashboard() {
   const toast = useToast();
   const [confirm, setConfirm] = useState({ open: false, row: null, loading: false });
@@ -359,9 +361,6 @@ const StatusBadge = ({ status }) => {
   return <span style={badge(tone)}>{fmt(status)}</span>;
 };
 
-/**
- * Tally of counts for each status.
- */
 const counts = useMemo(() => {
   const tally = {
     total,
@@ -369,11 +368,14 @@ const counts = useMemo(() => {
     interview: 0,
     offer: 0,
     rejected: 0,
+    wishlist: 0,
   };
-  rows.forEach((r) => {
-    const s = String(r.status || '').toLowerCase();
-    if (tally[s] !== undefined) tally[s]++;
-  });
+
+  for (const r of rows) {
+    const s = (r.status || '').toLowerCase();
+    if (s in tally) tally[s]++;
+  }
+
   return tally;
 }, [rows, total]);
 
@@ -729,7 +731,7 @@ return (
 
       {/* Table */}
 {!loading && rows.length > 0 && (
-  <div style={{ ...card, overflow: 'hidden' }} className="hidden md:block">
+  <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
     <div style={{ overflowX: 'auto' }}>
       <table
         cellPadding="20"
@@ -1120,6 +1122,7 @@ return (
   onConfirm={confirmDelete}
   loading={confirm.loading}
 />
+
 
 </main>
 );
